@@ -1,2 +1,5 @@
 DefaultPackage
 db
+gngs
+gngs.tools
+trie
