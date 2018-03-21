@@ -1,5 +1,6 @@
 DefaultPackage
 db
 gngs
+gngs.pair
 gngs.tools
 trie
