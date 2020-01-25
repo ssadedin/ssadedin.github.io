@@ -1,7 +1,12 @@
 DefaultPackage
 db
 gngs
+gngs.bx
+gngs.cnv
 gngs.coverage
 gngs.pair
+gngs.plot
+gngs.plot.bx
+gngs.region
 gngs.tools
 trie
