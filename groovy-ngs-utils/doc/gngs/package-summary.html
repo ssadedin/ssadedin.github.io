@@ -75,7 +75,7 @@ function windowTitle()
 <h2 title="Package gngs Description" class="title">Package gngs Description</h2>
 <div class="header"> All the core classes making up Groovy NGS Utils
  
-</div>
+ </div>
 
 
 <div class="contentContainer">
@@ -106,6 +106,14 @@ function windowTitle()
                                 </a></strong>
                             </td>
                             <td>Represents a constraint in a genetic model</td>
+                        </tr>
+<tr class="altColor">
+                            <td class="colOne">
+                                <strong><a href="GeneAnnotationSource.html" title="class in gngs">
+                                    GeneAnnotationSource
+                                </a></strong>
+                            </td>
+                            <td>Abstract interface for gene annotation sources</td>
                         </tr>
 <tr class="altColor">
                             <td class="colOne">
@@ -169,15 +177,6 @@ function windowTitle()
                         </tr>
 <tr class="altColor">
                             <td class="colOne">
-                                <strong><a href="AltContigIndex.html" title="class in gngs">
-                                    AltContigIndex
-                                </a></strong>
-                            </td>
-                            <td>Parses an alt-index in SAM format as provided with GRCh38 to define the alt contigs,
- including extracting the regions in the primary assembly covered by each alt contig</td>
-                        </tr>
-<tr class="altColor">
-                            <td class="colOne">
                                 <strong><a href="AsciiWriter.html" title="class in gngs">
                                     AsciiWriter
                                 </a></strong>
@@ -201,6 +200,14 @@ function windowTitle()
                                 </a></strong>
                             </td>
                             <td>Support for parsing, filtering, and manipuulating BED files.</td>
+                        </tr>
+<tr class="altColor">
+                            <td class="colOne">
+                                <strong><a href="BED.1.html" title="class in gngs">
+                                    BED.1
+                                </a></strong>
+                            </td>
+                            <td></td>
                         </tr>
 <tr class="altColor">
                             <td class="colOne">
@@ -276,14 +283,6 @@ function windowTitle()
                         </tr>
 <tr class="altColor">
                             <td class="colOne">
-                                <strong><a href="Consensus.html" title="class in gngs">
-                                    Consensus
-                                </a></strong>
-                            </td>
-                            <td>Support to determine a consensus sequence from a set of sequences</td>
-                        </tr>
-<tr class="altColor">
-                            <td class="colOne">
                                 <strong><a href="CoverageBlock.html" title="class in gngs">
                                     CoverageBlock
                                 </a></strong>
@@ -329,27 +328,11 @@ function windowTitle()
                         </tr>
 <tr class="altColor">
                             <td class="colOne">
-                                <strong><a href="Docs.html" title="class in gngs">
-                                    Docs
-                                </a></strong>
-                            </td>
-                            <td></td>
-                        </tr>
-<tr class="altColor">
-                            <td class="colOne">
                                 <strong><a href="ExecutedProcess.html" title="class in gngs">
                                     ExecutedProcess
                                 </a></strong>
                             </td>
                             <td></td>
-                        </tr>
-<tr class="altColor">
-                            <td class="colOne">
-                                <strong><a href="FASTA.html" title="class in gngs">
-                                    FASTA
-                                </a></strong>
-                            </td>
-                            <td>Simple utilities for manipulating FASTA files.</td>
                         </tr>
 <tr class="altColor">
                             <td class="colOne">
@@ -367,23 +350,6 @@ function windowTitle()
                                 </a></strong>
                             </td>
                             <td>Models a single FASTH read, including the header (with name), barcodes, bases and 
- quality information.</td>
-                        </tr>
-<tr class="altColor">
-                            <td class="colOne">
-                                <strong><a href="FASTQ.html" title="class in gngs">
-                                    FASTQ
-                                </a></strong>
-                            </td>
-                            <td>Simple support for reading fastq files.</td>
-                        </tr>
-<tr class="altColor">
-                            <td class="colOne">
-                                <strong><a href="FASTQRead.html" title="class in gngs">
-                                    FASTQRead
-                                </a></strong>
-                            </td>
-                            <td>Models a single FASTQ read, including the header (with name), bases and 
  quality information.</td>
                         </tr>
 <tr class="altColor">
@@ -413,19 +379,11 @@ function windowTitle()
                         </tr>
 <tr class="altColor">
                             <td class="colOne">
-                                <strong><a href="GRange.html" title="class in gngs">
-                                    GRange
+                                <strong><a href="GenomeInfo.html" title="class in gngs">
+                                    GenomeInfo
                                 </a></strong>
                             </td>
-                            <td>Range over an interval</td>
-                        </tr>
-<tr class="altColor">
-                            <td class="colOne">
-                                <strong><a href="GRegion.html" title="class in gngs">
-                                    GRegion
-                                </a></strong>
-                            </td>
-                            <td></td>
+                            <td>Static constant information about various genomes used to enable auto-sniffing etc</td>
                         </tr>
 <tr class="altColor">
                             <td class="colOne">
@@ -446,6 +404,14 @@ function windowTitle()
                         </tr>
 <tr class="altColor">
                             <td class="colOne">
+                                <strong><a href="GnomADHist.html" title="class in gngs">
+                                    GnomADHist
+                                </a></strong>
+                            </td>
+                            <td></td>
+                        </tr>
+<tr class="altColor">
+                            <td class="colOne">
                                 <strong><a href="Hash.html" title="class in gngs">
                                     Hash
                                 </a></strong>
@@ -463,74 +429,16 @@ function windowTitle()
                         </tr>
 <tr class="altColor">
                             <td class="colOne">
-                                <strong><a href="IntervalGCCache.html" title="class in gngs">
-                                    IntervalGCCache
-                                </a></strong>
-                            </td>
-                            <td>Efficiently supports computing and caching approximate GC content
- for random fragments of DNA in a genome.</td>
-                        </tr>
-<tr class="altColor">
-                            <td class="colOne">
-                                <strong><a href="IntervalGCCache.IntervalGCQueryCache.html" title="class in gngs">
-                                    IntervalGCCache.IntervalGCQueryCache
+                                <strong><a href="IlluminaSNPData.html" title="class in gngs">
+                                    IlluminaSNPData
                                 </a></strong>
                             </td>
                             <td></td>
-                        </tr>
-<tr class="altColor">
-                            <td class="colOne">
-                                <strong><a href="JavaAdapters.html" title="class in gngs">
-                                    JavaAdapters
-                                </a></strong>
-                            </td>
-                            <td>API adapters for calls that do not map cleanly between groovy and java</td>
-                        </tr>
-<tr class="altColor">
-                            <td class="colOne">
-                                <strong><a href="LXPos.html" title="class in gngs">
-                                    LXPos
-                                </a></strong>
-                            </td>
-                            <td></td>
-                        </tr>
-<tr class="altColor">
-                            <td class="colOne">
-                                <strong><a href="LXXPos.html" title="class in gngs">
-                                    LXXPos
-                                </a></strong>
-                            </td>
-                            <td>LXXPos models genomic positions including alt and random contigs into a flat 
- space fitting into 63bit unsigned Java long type.</td>
                         </tr>
 <tr class="altColor">
                             <td class="colOne">
                                 <strong><a href="LiftOver.html" title="class in gngs">
                                     LiftOver
-                                </a></strong>
-                            </td>
-                            <td></td>
-                        </tr>
-<tr class="altColor">
-                            <td class="colOne">
-                                <strong><a href="MissingMateIndex.html" title="class in gngs">
-                                    MissingMateIndex
-                                </a></strong>
-                            </td>
-                            <td></td>
-                        </tr>
-<tr class="altColor">
-                            <td class="colOne">
-                                <strong><a href="MovingWindowActor.html" title="class in gngs">
-                                    MovingWindowActor
-                                </a></strong>
-                            </td>
-                            <td></td>
-                        </tr>
-<tr class="altColor">
-                            <td class="colOne">
-                                <strong><a href="NumericRegionComparator.html" title="class in gngs">
-                                    NumericRegionComparator
                                 </a></strong>
                             </td>
                             <td></td>
@@ -579,11 +487,11 @@ function windowTitle()
                         </tr>
 <tr class="altColor">
                             <td class="colOne">
-                                <strong><a href="Pedigree.html" title="class in gngs">
-                                    Pedigree
+                                <strong><a href="PDF.html" title="class in gngs">
+                                    PDF
                                 </a></strong>
                             </td>
-                            <td>Represents a set of relationships between individuals in a family</td>
+                            <td>A light weight PDF Builder for creating PDFs to show results.</td>
                         </tr>
 <tr class="altColor">
                             <td class="colOne">
@@ -660,6 +568,38 @@ function windowTitle()
                         </tr>
 <tr class="altColor">
                             <td class="colOne">
+                                <strong><a href="RangeIndex.1.html" title="class in gngs">
+                                    RangeIndex.1
+                                </a></strong>
+                            </td>
+                            <td></td>
+                        </tr>
+<tr class="altColor">
+                            <td class="colOne">
+                                <strong><a href="RangeIndex.2.html" title="class in gngs">
+                                    RangeIndex.2
+                                </a></strong>
+                            </td>
+                            <td></td>
+                        </tr>
+<tr class="altColor">
+                            <td class="colOne">
+                                <strong><a href="RangeIndex.3.html" title="class in gngs">
+                                    RangeIndex.3
+                                </a></strong>
+                            </td>
+                            <td></td>
+                        </tr>
+<tr class="altColor">
+                            <td class="colOne">
+                                <strong><a href="RangeIndex.4.html" title="class in gngs">
+                                    RangeIndex.4
+                                </a></strong>
+                            </td>
+                            <td></td>
+                        </tr>
+<tr class="altColor">
+                            <td class="colOne">
                                 <strong><a href="RangedData.html" title="class in gngs">
                                     RangedData
                                 </a></strong>
@@ -668,20 +608,11 @@ function windowTitle()
                         </tr>
 <tr class="altColor">
                             <td class="colOne">
-                                <strong><a href="ReadMateLookupActor.html" title="class in gngs">
-                                    ReadMateLookupActor
-                                </a></strong>
-                            </td>
-                            <td>An actor that can accept <a href='../gngs/ResolveRequest.html' title='ResolveRequest'>ResolveRequest</a> messages to asynchronously 
- resolve the missing mates of read pairs.</td>
-                        </tr>
-<tr class="altColor">
-                            <td class="colOne">
                                 <strong><a href="ReadWindow.html" title="class in gngs">
                                     ReadWindow
                                 </a></strong>
                             </td>
-                            <td></td>
+                            <td>Models a window positioned centrally around a location in the genome containing overlapping reads</td>
                         </tr>
 <tr class="altColor">
                             <td class="colOne">
@@ -694,32 +625,8 @@ function windowTitle()
                         </tr>
 <tr class="altColor">
                             <td class="colOne">
-                                <strong><a href="Region.html" title="class in gngs">
-                                    Region
-                                </a></strong>
-                            </td>
-                            <td>Region of a genome</td>
-                        </tr>
-<tr class="altColor">
-                            <td class="colOne">
-                                <strong><a href="RegionComparator.html" title="class in gngs">
-                                    RegionComparator
-                                </a></strong>
-                            </td>
-                            <td></td>
-                        </tr>
-<tr class="altColor">
-                            <td class="colOne">
                                 <strong><a href="RegionIterator.html" title="class in gngs">
                                     RegionIterator
-                                </a></strong>
-                            </td>
-                            <td></td>
-                        </tr>
-<tr class="altColor">
-                            <td class="colOne">
-                                <strong><a href="RegionScan.html" title="class in gngs">
-                                    RegionScan
                                 </a></strong>
                             </td>
                             <td></td>
@@ -742,11 +649,19 @@ function windowTitle()
                         </tr>
 <tr class="altColor">
                             <td class="colOne">
-                                <strong><a href="Relationship.html" title="class in gngs">
-                                    Relationship
+                                <strong><a href="RegulatingActor.1.html" title="class in gngs">
+                                    RegulatingActor.1
                                 </a></strong>
                             </td>
-                            <td>Models a relationship between two people</td>
+                            <td></td>
+                        </tr>
+<tr class="altColor">
+                            <td class="colOne">
+                                <strong><a href="RegulatingActor.2.html" title="class in gngs">
+                                    RegulatingActor.2
+                                </a></strong>
+                            </td>
+                            <td></td>
                         </tr>
 <tr class="altColor">
                             <td class="colOne">
@@ -766,15 +681,6 @@ function windowTitle()
                         </tr>
 <tr class="altColor">
                             <td class="colOne">
-                                <strong><a href="ResourceDownloader.html" title="class in gngs">
-                                    ResourceDownloader
-                                </a></strong>
-                            </td>
-                            <td>Support for downloading data from URLs like UCSC with built-in 
- caching and genome version detection.</td>
-                        </tr>
-<tr class="altColor">
-                            <td class="colOne">
                                 <strong><a href="SAM.html" title="class in gngs">
                                     SAM
                                 </a></strong>
@@ -788,15 +694,7 @@ function windowTitle()
                                     SAMRecordCategory
                                 </a></strong>
                             </td>
-                            <td></td>
-                        </tr>
-<tr class="altColor">
-                            <td class="colOne">
-                                <strong><a href="SAMRecordPair.html" title="class in gngs">
-                                    SAMRecordPair
-                                </a></strong>
-                            </td>
-                            <td>Models a read pair, where one of the reads might be missing.</td>
+                            <td>A convenience class to streamline working with SAMRecord objects</td>
                         </tr>
 <tr class="altColor">
                             <td class="colOne">
@@ -817,12 +715,20 @@ function windowTitle()
                         </tr>
 <tr class="altColor">
                             <td class="colOne">
+                                <strong><a href="SexKaryotyper.1.html" title="class in gngs">
+                                    SexKaryotyper.1
+                                </a></strong>
+                            </td>
+                            <td></td>
+                        </tr>
+<tr class="altColor">
+                            <td class="colOne">
                                 <strong><a href="SimpleLogFormatter.html" title="class in gngs">
                                     SimpleLogFormatter
                                 </a></strong>
                             </td>
                             <td>The default Java log former uses a format that is too verbose, so
- replace it with something more compact.</td>
+ this class replaces it with something more compact.</td>
                         </tr>
 <tr class="altColor">
                             <td class="colOne">
@@ -868,23 +774,6 @@ function windowTitle()
                         </tr>
 <tr class="altColor">
                             <td class="colOne">
-                                <strong><a href="Utils.html" title="class in gngs">
-                                    Utils
-                                </a></strong>
-                            </td>
-                            <td>Miscellaneous utilities that I couldn't think to put anywhere else</td>
-                        </tr>
-<tr class="altColor">
-                            <td class="colOne">
-                                <strong><a href="VCF.html" title="class in gngs">
-                                    VCF
-                                </a></strong>
-                            </td>
-                            <td>The VCF class supports simple parsing, filtering, querying and updating of
- VCF files.</td>
-                        </tr>
-<tr class="altColor">
-                            <td class="colOne">
                                 <strong><a href="VCFIndex.html" title="class in gngs">
                                     VCFIndex
                                 </a></strong>
@@ -893,20 +782,11 @@ function windowTitle()
                         </tr>
 <tr class="altColor">
                             <td class="colOne">
-                                <strong><a href="VCFParseContext.html" title="class in gngs">
-                                    VCFParseContext
+                                <strong><a href="VCFIndex.1.html" title="class in gngs">
+                                    VCFIndex.1
                                 </a></strong>
                             </td>
                             <td></td>
-                        </tr>
-<tr class="altColor">
-                            <td class="colOne">
-                                <strong><a href="VCFSiteWalker.html" title="class in gngs">
-                                    VCFSiteWalker
-                                </a></strong>
-                            </td>
-                            <td>Traverses a set of VCFs site by site, such that all sites in the VCFs are visited
- one at a time.</td>
                         </tr>
 <tr class="altColor">
                             <td class="colOne">
@@ -926,54 +806,12 @@ function windowTitle()
                         </tr>
 <tr class="altColor">
                             <td class="colOne">
-                                <strong><a href="VEPConsequences.html" title="class in gngs">
-                                    VEPConsequences
-                                </a></strong>
-                            </td>
-                            <td></td>
-                        </tr>
-<tr class="altColor">
-                            <td class="colOne">
-                                <strong><a href="Variant.html" title="class in gngs">
-                                    Variant
-                                </a></strong>
-                            </td>
-                            <td>Represents the genetic state at a specific locus in a genome
- ie: captures the information at a single line of a VCF file.
- </td>
-                        </tr>
-<tr class="altColor">
-                            <td class="colOne">
-                                <strong><a href="Variant.Allele.html" title="class in gngs">
-                                    Variant.Allele
-                                </a></strong>
-                            </td>
-                            <td>A specific allele in the context of a Variant in a VCF file</td>
-                        </tr>
-<tr class="altColor">
-                            <td class="colOne">
                                 <strong><a href="VariantInjector.html" title="class in gngs">
                                     VariantInjector
                                 </a></strong>
                             </td>
                             <td>Injects a variant into a FASTQ read based on recognising the sequence corresponding to 
  the reference sequence for the location of the variant within the read.</td>
-                        </tr>
-<tr class="altColor">
-                            <td class="colOne">
-                                <strong><a href="WSCredentials.html" title="class in gngs">
-                                    WSCredentials
-                                </a></strong>
-                            </td>
-                            <td></td>
-                        </tr>
-<tr class="altColor">
-                            <td class="colOne">
-                                <strong><a href="WebService.html" title="class in gngs">
-                                    WebService
-                                </a></strong>
-                            </td>
-                            <td>Base class for APIs accessing Web services based on JSON data</td>
                         </tr>
 <tr class="altColor">
                             <td class="colOne">
@@ -1020,19 +858,20 @@ function windowTitle()
                         </tr>
 <tr class="altColor">
                             <td class="colOne">
-                                <strong><a href="RelationshipType.html" title="class in gngs">
-                                    RelationshipType
-                                </a></strong>
-                            </td>
-                            <td>Models a relationship between two individuals in a pedigree</td>
-                        </tr>
-<tr class="altColor">
-                            <td class="colOne">
                                 <strong><a href="Sex.html" title="class in gngs">
                                     Sex
                                 </a></strong>
                             </td>
                             <td></td>
+                        </tr>
+<tr class="altColor">
+                            <td class="colOne">
+                                <strong><a href="VepConsequence.html" title="class in gngs">
+                                    VepConsequence
+                                </a></strong>
+                            </td>
+                            <td>Models VEP Consequence type as sourced from <a href="https://asia.ensembl.org/info/genome/variation/prediction/predicted_data.html#consequences">https://asia.ensembl.org/info/genome/variation/prediction/predicted_data.html#consequences</a>
+ (Ensembl release 103 - February 2021).</td>
                         </tr>
 
                     </tbody>
@@ -1060,22 +899,6 @@ function windowTitle()
                                 </a></strong>
                             </td>
                             <td>Convenience for aborting loops invoked via closures</td>
-                        </tr>
-<tr class="altColor">
-                            <td class="colOne">
-                                <strong><a href="StopParsingVCFException.html" title="class in gngs">
-                                    StopParsingVCFException
-                                </a></strong>
-                            </td>
-                            <td></td>
-                        </tr>
-<tr class="altColor">
-                            <td class="colOne">
-                                <strong><a href="WebServiceException.html" title="class in gngs">
-                                    WebServiceException
-                                </a></strong>
-                            </td>
-                            <td></td>
                         </tr>
 
                     </tbody>
