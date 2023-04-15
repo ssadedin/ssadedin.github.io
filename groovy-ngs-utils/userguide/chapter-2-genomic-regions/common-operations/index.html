@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" /> 
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"> 
+<title>Groovy NGS: Common Operations</title>
+<link rel="stylesheet" type="text/css" href="/userguide/static/css/katex.min.css">
+<link rel="stylesheet" type="text/css" href="/userguide/static/main.css">
+<link rel="stylesheet" type="text/css" href="/userguide/static/css/global-overrides.css">
+</head>
+<link rel="shortcut icon" href="/userguide/favicon.png"type="image/ico"/>
+<body class="theme-znai-dark">
+<script>(function() {
+    var themeNameKey = 'znaiTheme';
+    var darkThemeName = 'znai-dark';
+    var lightThemeName = 'default';
+
+    var znaiTheme = {
+        changeHandlers: [],
+        addChangeHandler(handler) {
+            this.changeHandlers.push(handler);
+        },
+        removeChangeHandler(handler) {
+            var idx = this.changeHandlers.indexOf(handler);
+            this.changeHandlers.splice(idx, 1);
+        },
+        set(name) {
+            this.name = name;
+            document.body.className = 'theme-' + name;
+
+            var idx = 0;
+            var len = this.changeHandlers.length;
+            for (; idx < len; idx++) {
+                this.changeHandlers[idx](name);
+            }
+        },
+        setExplicitly(name) {
+            storeThemeName(name);
+            this.set(name);
+        },
+        setExplicitlyIfNotSetAlready(name) {
+            const themeName = getStoredThemeName();
+            if (themeName) {
+                return
+            }
+
+            this.setExplicitly(name)
+        },
+        toggle() {
+            this.setExplicitly(this.name === lightThemeName ? darkThemeName : lightThemeName)
+        }
+    };
+
+    var mediaThemeName = setLightMatchMediaListenerAndGetThemeName()
+    var themeName = getStoredThemeName() || mediaThemeName;
+    znaiTheme.set(themeName);
+
+    window.znaiTheme = znaiTheme;
+
+    function getStoredThemeName() {
+        return localStorage.getItem(themeNameKey);
+    }
+
+    function storeThemeName(name) {
+        return localStorage.setItem(themeNameKey, name);
+    }
+
+    function setLightMatchMediaListenerAndGetThemeName() {
+        if (!window.matchMedia) {
+            return darkThemeName;
+        }
+
+        var lightQuery = window.matchMedia('(prefers-color-scheme: light)');
+        lightQuery.addListener(function (e) {
+            const newThemeName = e.matches ? lightThemeName : darkThemeName;
+            znaiTheme.setExplicitly(newThemeName);
+        });
+
+        return lightQuery.matches ? lightThemeName : darkThemeName;
+    }
+})()</script>
+<div id="znai"><div id="znai-initial-page-loading" style="margin: -20px 0 0 -20px; padding: 0 40px 40px 0; width: 100vw; height: 100vh; display: flex; justify-content: center; align-items: center">
+    <div></div>
+</div><section style="max-width: 640px; margin-left: auto; margin-right: auto;">
+<article>
+<header><h1>Creating Regions Objects</h1></header>
+<p>This section describes how to do a variety of common operations that are useful in analysing genomic data.The first thing you need to do to work with regions is to create a https://ssadedin.github.io/groovy-ngs-utils/doc/gngs/Regions.html Regions object. One way to do this is &quot;by hand&quot; - ie: by manually constructing https://ssadedin.github.io/groovy-ngs-utils/doc/gngs/Region.html Region objects. You can do this by passing a region defined as a string using the standard format to the Region constructor, for example: groovy r = new Region('chr1:100-200') Then you can convert a list of these to a Regions object using the Groovy as operator. For example, consider the following set of regions: A |--------------------| B C D |---| |---| |---| 0 5 10 15 20 25 30 35 To create a Regions object representing these directly, we can use the following code: groovy regions = [ 'chr1:5-10', 'chr1:15-20', 'chr1:30-35', 'chr1:0-25' ].collect { new Region(it) } as Regions Observe that in this set of example regions we have overlapping ranges. In general, Groovy-NGS does not automatically combine or merge regions, and the resulting Regions object behaves much like a simple collection of the regions you put in, only with some operations accelerated. If you desire that the regions be combined, you need to use one of the specific operations to do that after creating your Regions object.</p>
+</article>
+
+<article>
+<header><h1>Basic Metrics</h1></header>
+<p>Some simple metrics you might like to know about your set of include: Description Code Output [{text=the total span of all the ranges included, type=SimpleText}] [{code=regions.size(), type=InlinedCode}] [{code=44, type=InlinedCode}] [{text=the count of the number of ranges included, type=SimpleText}] [{code=regions.numberOfRanges, type=InlinedCode}] [{code=4, type=InlinedCode}] Note: the use of size() slightly conflicts with the standard Groovy semantics for the size() method as this would normally return the number of elements in a collection. Instead, you can think of this as returning the total number of bases in the collection.</p>
+</article>
+
+<article>
+<header><h1>Treating as a Collection</h1></header>
+<p>The Regions object implements standard Java and Groovy interfaces and methods to enable common collections operations. In particular, the https://docs.groovy-lang.org/latest/html/groovy-jdk/java/lang/Iterable.html Iterable interface is implemented so that the full range of Groovy enhanced operations for collections are available. These operations are extremely powerful and often allow you to accomplish complex data analysis tasks with just a few lines of chained declarative invocations. When used as an Iterable , the Regions class will span across all chromosomes / contigs. If you want to operate at the chromosome/contig level, you can consider using the https://ssadedin.github.io/groovy-ngs-utils/doc/gngs/Regions.html#index index attribute to access the per-chromosome index which also supports the Iterable interface. Indexed Access For accessing subsets of regions within a Regions object, specific support is provided to allow lookup using &quot;square bracket&quot; notation efficient. Therefore, for example, to access the 2nd and 3rd regions of our set, the following code will work:Input groovy regions[1..2] Output [chr1:15-20, chr1:30-35]</p>
+</article>
+
+<article>
+<header><h1>Finding Overlaps</h1></header>
+<p>One of the most common needs is to find which regions overlap a given interval. Generally, the most practical method to use for this is the https://ssadedin.github.io/groovy-ngs-utils/doc/gngs/Regions.html#getOverlapRegions(gngs.IRegion) getOverlapRegions method. This method will return a list of the regions from the set that have at least 1 base of overlap with the region that is specified.Example: to find which regions overlap the range 12 to 30:Input: groovy r = new Region('chr1:12-30') overlaps = regions.getOverlapRegions(r) Output: [chr1:0-25, chr1:15-20, chr1:30-35] Note: the getOverlapRegions method returns a List object rather than a Regions object. Therefore in this case, the .size() method returns the number of elements, not the total span of all the regions contains. In general, you will find Groovy NGS returns plain collections as a result of its methods, which you can then choose to convert into a Regions object by adding as Regions if that is what you need.Groovy NGS interprets region boundaries as inclusive. This means that the region chr1:0-10 includes the position 10 and does overlap the region chr1:10-20 .Note: There are several other getOverlaps methods. These can be slightly more efficient, in specific circumstances.</p>
+</article>
+
+<article>
+<header><h1>Intersection</h1></header>
+<p>Intersection finds the shared parts of each region in your set with another region that you specify. To this, use the https://ssadedin.github.io/groovy-ngs-utils/doc/gngs/Regions.html#intersectRegion(gngs.Region) intersectRegion method.Input groovy ix = regions.intersectRegion(r) ix*.toString() Output groovy [chr1:12-25, chr1:15-20, chr1:30-30]</p>
+</article>
+
+<article>
+<header><h1>Flattening</h1></header>
+<p>In many types of analysis, you desire to know only the total set of regions encompassed by an overlapping set. Groovy-NGS mirrors the R-lang terminology here, offering a reduce function to flatten a set of regions to an equivalent set where all overlaps are compressed to a single region.Input groovy regions.reduce()*.toString() Output [chr1:0-25, chr1:30-35] This has changed the ranges to the following: |--------------------| |---| 0 5 10 15 20 25 30 35</p>
+</article>
+
+<article>
+<header><h1>Assigning Properties</h1></header>
+<p>In analysing genomic data we usually are interested in specific attributes of the regions we are working with. For example, the genes they represent, statistics about their attributes or any arbitrary data that we associate with the region for the purpose of the analysis. It is very convenient therefore to be able to attach metadata to each region so that these are available at any point they are needed in analysis.The Groovy-NGS https://ssadedin.github.io/groovy-ngs-utils/doc/gngs/Region.html Region class extends the Groovy https://ssadedin.github.io/groovy-ngs-utils/doc/gngs/Region.html Expando class which allows you to set arbitrary properties on the object alongside the properties that the class natively supports. For example:Input groovy regions[0].foo = 'bar' regions[1].foo = 'baz' regions[2].foo = 'boo' regions[3].foo = 'boz' regions.each { r -&gt; println &quot;The region $r has foo = $r.foo&quot; } Output The region chr1:5-10 has foo = bar The region chr1:15-20 has foo = baz The region chr1:30-35 has foo = boo The region chr1:0-25 has foo = boz There are some important caveats with using this feature:you should ensure the properties assigned don't clash with native property names. In such cases, which property is accessed may be ambiguous. some operations on Regions objects that modify the regions will lose the metadata because they return new Regions objects. If you want to re-associate the metadata you may have to do this manually (for example, by using findOverlapRegions or similar.</p>
+</article>
+</section>
+</div>
+<script type="text/javascript" src="/userguide/footer.js"></script>
+<script type="text/javascript" src="/userguide/toc.js"></script>
+<script type="text/javascript" src="/userguide/assets.js"></script>
+<script type="text/javascript" src="/userguide/static/main.js"></script>
+<script type="text/javascript" src="/userguide/search-index.js"></script>
+<script>
+document.getElementById('znai').innerHTML = '';
+/*<!--*/
+ReactDOM.render(React.createElement(Documentation, {
+  "docMeta" : {
+    "viewOn" : {
+      "link" : "https://github.com/ssadedin/groovy-ngs-utils",
+      "title" : "Groovy NGS"
+    },
+    "id" : "userguide",
+    "title" : "Groovy NGS",
+    "type" : "Guide",
+    "previewEnabled" : false
+  },
+  "page" : {
+    "type" : "Page",
+    "content" : [ {
+      "type" : "Paragraph",
+      "content" : [ {
+        "text" : "This section describes how to do a variety of common operations that are useful in",
+        "type" : "SimpleText"
+      }, {
+        "type" : "SoftLineBreak"
+      }, {
+        "text" : "analysing genomic data.",
+        "type" : "SimpleText"
+      } ]
+    }, {
+      "id" : "creating-regions-objects",
+      "title" : "Creating Regions Objects",
+      "type" : "Section",
+      "content" : [ {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "The first thing you need to do to work with regions is to create a ",
+          "type" : "SimpleText"
+        }, {
+          "url" : "https://ssadedin.github.io/groovy-ngs-utils/doc/gngs/Regions.html",
+          "isFile" : false,
+          "type" : "Link",
+          "content" : [ {
+            "text" : "Regions",
+            "type" : "SimpleText"
+          } ]
+        }, {
+          "text" : " object.",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "One way to do this is \"by hand\" - ie: by manually constructing ",
+          "type" : "SimpleText"
+        }, {
+          "url" : "https://ssadedin.github.io/groovy-ngs-utils/doc/gngs/Region.html",
+          "isFile" : false,
+          "type" : "Link",
+          "content" : [ {
+            "text" : "Region",
+            "type" : "SimpleText"
+          } ]
+        }, {
+          "text" : " objects.",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "You can do this by passing a region defined as a string using the standard format to",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "the ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "Region",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " constructor, for example:",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "lang" : "groovy",
+        "snippet" : "r = new Region('chr1:100-200')\n",
+        "lineNumber" : "",
+        "type" : "Snippet"
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "Then you can convert a list of these to a ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "Regions",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " object using the Groovy ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "as",
+          "type" : "InlinedCode"
+        }, {
+          "text" : "",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "operator. For example, consider the following set of regions:",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "lang" : "",
+        "snippet" : "          A\n|--------------------|\n      B       C            D\n    |---|   |---|        |---|\n0   5   10  15  20   25  30  35\n",
+        "lineNumber" : "",
+        "type" : "Snippet"
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "To create a ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "Regions",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " object representing these directly, we can use the following code:",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "lang" : "groovy",
+        "snippet" : "regions = [\n              'chr1:5-10', 'chr1:15-20', 'chr1:30-35', 'chr1:0-25'\n          ].collect { \n              new Region(it) \n          } as Regions\n",
+        "lineNumber" : "",
+        "type" : "Snippet"
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "Observe that in this set of example regions we have overlapping ranges. In",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "general, Groovy-NGS does not automatically combine or merge regions, and the resulting",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "code" : "Regions",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " object behaves much like a simple collection of the regions you put in, only",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "with some operations accelerated. If you desire that the regions be combined, you",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "need to use one of the specific operations to do that after creating your ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "Regions",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " object.",
+          "type" : "SimpleText"
+        } ]
+      } ]
+    }, {
+      "id" : "basic-metrics",
+      "title" : "Basic Metrics",
+      "type" : "Section",
+      "content" : [ {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "Some simple metrics you might like to know about your set of include:",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "table" : {
+          "columns" : [ {
+            "title" : "Description",
+            "align" : "left"
+          }, {
+            "title" : "Code",
+            "align" : "left"
+          }, {
+            "title" : "Output",
+            "align" : "left"
+          } ],
+          "data" : [ [ [ {
+            "text" : "the total span of all the ranges included",
+            "type" : "SimpleText"
+          } ], [ {
+            "code" : "regions.size()",
+            "type" : "InlinedCode"
+          } ], [ {
+            "code" : "44",
+            "type" : "InlinedCode"
+          } ] ], [ [ {
+            "text" : "the count of the number of ranges included",
+            "type" : "SimpleText"
+          } ], [ {
+            "code" : "regions.numberOfRanges",
+            "type" : "InlinedCode"
+          } ], [ {
+            "code" : "4",
+            "type" : "InlinedCode"
+          } ] ] ]
+        },
+        "type" : "Table"
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "Note: the use of ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "size()",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " slightly conflicts with the standard Groovy semantics",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "for the ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "size()",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " method as this would normally return the number of elements in a collection. Instead, you can think of this as returning the total number of bases",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "in the collection.",
+          "type" : "SimpleText"
+        } ]
+      } ]
+    }, {
+      "id" : "treating-as-a-collection",
+      "title" : "Treating as a Collection",
+      "type" : "Section",
+      "content" : [ {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "The ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "Regions",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " object implements standard Java and Groovy interfaces and methods to enable",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "common collections operations. In particular, the ",
+          "type" : "SimpleText"
+        }, {
+          "url" : "https://docs.groovy-lang.org/latest/html/groovy-jdk/java/lang/Iterable.html",
+          "isFile" : false,
+          "type" : "Link",
+          "content" : [ {
+            "text" : "Iterable",
+            "type" : "SimpleText"
+          } ]
+        }, {
+          "text" : " interface is implemented so that the full range of Groovy",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "enhanced operations for collections are available. These operations are extremely powerful and",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "often allow you to accomplish complex data analysis tasks with just a few lines of chained",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "declarative invocations. When used as an ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "Iterable",
+          "type" : "InlinedCode"
+        }, {
+          "text" : ", the ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "Regions",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " class will",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "span across all chromosomes / contigs. If you want to operate at the",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "chromosome/contig level, you can consider using the",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "url" : "https://ssadedin.github.io/groovy-ngs-utils/doc/gngs/Regions.html#index",
+          "isFile" : false,
+          "type" : "Link",
+          "content" : [ {
+            "text" : "index",
+            "type" : "SimpleText"
+          } ]
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "attribute to access the per-chromosome index which also supports the Iterable interface.",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "id" : "treating-as-a-collection-indexed-access",
+        "level" : 2,
+        "title" : "Indexed Access",
+        "type" : "SubHeading"
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "For accessing subsets of regions within a ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "Regions",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " object, specific support is provided to",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "allow lookup using \"square bracket\" notation efficient. Therefore, for example, to access",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "the 2nd and 3rd regions of our set, the following code will work:",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "type" : "StrongEmphasis",
+          "content" : [ {
+            "text" : "Input",
+            "type" : "SimpleText"
+          } ]
+        } ]
+      }, {
+        "lang" : "groovy",
+        "snippet" : "regions[1..2]\n",
+        "lineNumber" : "",
+        "type" : "Snippet"
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "type" : "StrongEmphasis",
+          "content" : [ {
+            "text" : "Output",
+            "type" : "SimpleText"
+          } ]
+        } ]
+      }, {
+        "lang" : "",
+        "snippet" : "[chr1:15-20, chr1:30-35]\n",
+        "lineNumber" : "",
+        "type" : "Snippet"
+      } ]
+    }, {
+      "id" : "finding-overlaps",
+      "title" : "Finding Overlaps",
+      "type" : "Section",
+      "content" : [ {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "One of the most common needs is to find which regions overlap a given interval. Generally,",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "the most practical method to use for this is the ",
+          "type" : "SimpleText"
+        }, {
+          "url" : "https://ssadedin.github.io/groovy-ngs-utils/doc/gngs/Regions.html#getOverlapRegions(gngs.IRegion)",
+          "isFile" : false,
+          "type" : "Link",
+          "content" : [ {
+            "text" : "getOverlapRegions",
+            "type" : "SimpleText"
+          } ]
+        }, {
+          "text" : " method. This method will return a list of the regions from the set that have at least",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "1 base of overlap with the region that is specified.",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "Example: to find which regions overlap the range 12 to 30:",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "type" : "StrongEmphasis",
+          "content" : [ {
+            "text" : "Input",
+            "type" : "SimpleText"
+          } ]
+        }, {
+          "text" : ":",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "lang" : "groovy",
+        "snippet" : "r = new Region('chr1:12-30')\noverlaps = regions.getOverlapRegions(r)\n",
+        "lineNumber" : "",
+        "type" : "Snippet"
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "type" : "StrongEmphasis",
+          "content" : [ {
+            "text" : "Output",
+            "type" : "SimpleText"
+          } ]
+        }, {
+          "text" : ":",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "lang" : "",
+        "snippet" : "[chr1:0-25, chr1:15-20, chr1:30-35]\n",
+        "lineNumber" : "",
+        "type" : "Snippet"
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "Note: the ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "getOverlapRegions",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " method returns a ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "List",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " object rather than a ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "Regions",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " object.",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "Therefore in this case, the ",
+          "type" : "SimpleText"
+        }, {
+          "code" : ".size()",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " method returns the number of elements, not the total",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "span of all the regions contains. In general, you will find Groovy NGS returns",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "plain collections as a result of its methods, which you can then choose to convert into",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "a ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "Regions",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " object by adding ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "as Regions",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " if that is what you need.",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "Groovy NGS interprets region boundaries as ",
+          "type" : "SimpleText"
+        }, {
+          "type" : "Emphasis",
+          "content" : [ {
+            "text" : "inclusive",
+            "type" : "SimpleText"
+          } ]
+        }, {
+          "text" : ". This means that the region",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "code" : "chr1:0-10",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " includes the position 10 and does overlap the region ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "chr1:10-20",
+          "type" : "InlinedCode"
+        }, {
+          "text" : ".",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "Note: There are several other ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "getOverlaps",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " methods. These can be slightly more efficient, in specific circumstances.",
+          "type" : "SimpleText"
+        } ]
+      } ]
+    }, {
+      "id" : "intersection",
+      "title" : "Intersection",
+      "type" : "Section",
+      "content" : [ {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "Intersection finds the shared parts of each region in your set with another region that",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "you specify. To this, use the ",
+          "type" : "SimpleText"
+        }, {
+          "url" : "https://ssadedin.github.io/groovy-ngs-utils/doc/gngs/Regions.html#intersectRegion(gngs.Region)",
+          "isFile" : false,
+          "type" : "Link",
+          "content" : [ {
+            "text" : "intersectRegion",
+            "type" : "SimpleText"
+          } ]
+        }, {
+          "text" : " method.",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "type" : "StrongEmphasis",
+          "content" : [ {
+            "text" : "Input",
+            "type" : "SimpleText"
+          } ]
+        } ]
+      }, {
+        "lang" : "groovy",
+        "snippet" : "ix = regions.intersectRegion(r)\nix*.toString()\n",
+        "lineNumber" : "",
+        "type" : "Snippet"
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "type" : "StrongEmphasis",
+          "content" : [ {
+            "text" : "Output",
+            "type" : "SimpleText"
+          } ]
+        } ]
+      }, {
+        "lang" : "groovy",
+        "snippet" : "[chr1:12-25, chr1:15-20, chr1:30-30]\n",
+        "lineNumber" : "",
+        "type" : "Snippet"
+      } ]
+    }, {
+      "id" : "flattening",
+      "title" : "Flattening",
+      "type" : "Section",
+      "content" : [ {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "In many types of analysis, you desire to know only the total set of regions encompassed",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "by an overlapping set. Groovy-NGS mirrors the R-lang terminology here, offering a ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "reduce",
+          "type" : "InlinedCode"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "function to flatten a set of regions to an equivalent set where all overlaps are compressed",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "to a single region.",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "type" : "StrongEmphasis",
+          "content" : [ {
+            "text" : "Input",
+            "type" : "SimpleText"
+          } ]
+        } ]
+      }, {
+        "lang" : "groovy",
+        "snippet" : "regions.reduce()*.toString()\n",
+        "lineNumber" : "",
+        "type" : "Snippet"
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "type" : "StrongEmphasis",
+          "content" : [ {
+            "text" : "Output",
+            "type" : "SimpleText"
+          } ]
+        } ]
+      }, {
+        "lang" : "",
+        "snippet" : "[chr1:0-25, chr1:30-35]\n",
+        "lineNumber" : "",
+        "type" : "Snippet"
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "This has changed the ranges to the following:",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "lang" : "",
+        "snippet" : "|--------------------|   |---|\n0   5   10  15  20   25  30  35\n",
+        "lineNumber" : "",
+        "type" : "Snippet"
+      } ]
+    }, {
+      "id" : "assigning-properties",
+      "title" : "Assigning Properties",
+      "type" : "Section",
+      "content" : [ {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "In analysing genomic data we usually are interested in specific attributes of the regions we are",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "working with. For example, the genes they represent, statistics about their attributes or any arbitrary",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "data that we associate with the region for the purpose of the analysis. It is very convenient therefore to be able to attach metadata to each region so that these are available at any point",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "they are needed in analysis.",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "The Groovy-NGS",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "url" : "https://ssadedin.github.io/groovy-ngs-utils/doc/gngs/Region.html",
+          "isFile" : false,
+          "type" : "Link",
+          "content" : [ {
+            "text" : "Region",
+            "type" : "SimpleText"
+          } ]
+        }, {
+          "text" : " class",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "extends the Groovy",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "url" : "https://ssadedin.github.io/groovy-ngs-utils/doc/gngs/Region.html",
+          "isFile" : false,
+          "type" : "Link",
+          "content" : [ {
+            "text" : "Expando",
+            "type" : "SimpleText"
+          } ]
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "class which allows you to set arbitrary properties on the object alongside the properties",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "that the class natively supports. For example:",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "type" : "StrongEmphasis",
+          "content" : [ {
+            "text" : "Input",
+            "type" : "SimpleText"
+          } ]
+        } ]
+      }, {
+        "lang" : "groovy",
+        "snippet" : "regions[0].foo = 'bar'\nregions[1].foo = 'baz'\nregions[2].foo = 'boo'\nregions[3].foo = 'boz'\n\nregions.each { r ->\n    println \"The region $r has foo = $r.foo\"\n}\n",
+        "lineNumber" : "",
+        "type" : "Snippet"
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "type" : "StrongEmphasis",
+          "content" : [ {
+            "text" : "Output",
+            "type" : "SimpleText"
+          } ]
+        } ]
+      }, {
+        "lang" : "",
+        "snippet" : "The region chr1:5-10 has foo = bar\nThe region chr1:15-20 has foo = baz\nThe region chr1:30-35 has foo = boo\nThe region chr1:0-25 has foo = boz\n",
+        "lineNumber" : "",
+        "type" : "Snippet"
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "There are some important caveats with using this feature:",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "bulletMarker" : "-",
+        "tight" : true,
+        "type" : "BulletList",
+        "content" : [ {
+          "type" : "ListItem",
+          "content" : [ {
+            "type" : "Paragraph",
+            "content" : [ {
+              "text" : "you should ensure the properties assigned don't clash with native property names. In such cases,",
+              "type" : "SimpleText"
+            }, {
+              "type" : "SoftLineBreak"
+            }, {
+              "text" : "which property is accessed may be ambiguous.",
+              "type" : "SimpleText"
+            } ]
+          } ]
+        }, {
+          "type" : "ListItem",
+          "content" : [ {
+            "type" : "Paragraph",
+            "content" : [ {
+              "text" : "some operations on ",
+              "type" : "SimpleText"
+            }, {
+              "code" : "Regions",
+              "type" : "InlinedCode"
+            }, {
+              "text" : " objects that modify the regions will lose the metadata",
+              "type" : "SimpleText"
+            }, {
+              "type" : "SoftLineBreak"
+            }, {
+              "text" : "because they return new ",
+              "type" : "SimpleText"
+            }, {
+              "code" : "Regions",
+              "type" : "InlinedCode"
+            }, {
+              "text" : " objects. If you want to re-associate the metadata",
+              "type" : "SimpleText"
+            }, {
+              "type" : "SoftLineBreak"
+            }, {
+              "text" : "you may have to do this manually (for example, by using ",
+              "type" : "SimpleText"
+            }, {
+              "code" : "findOverlapRegions",
+              "type" : "InlinedCode"
+            }, {
+              "text" : " or similar.",
+              "type" : "SimpleText"
+            } ]
+          } ]
+        } ]
+      } ]
+    } ],
+    "lastModifiedTime" : 1681382498494,
+    "tocItem" : {
+      "chapterTitle" : "Chapter 2 Genomic Regions",
+      "pageTitle" : "Common Operations",
+      "pageMeta" : { },
+      "dirName" : "chapter-2-genomic-regions",
+      "fileName" : "common-operations",
+      "viewOnRelativePath" : null,
+      "pageSectionIdTitles" : [ {
+        "title" : "Creating Regions Objects",
+        "id" : "creating-regions-objects"
+      }, {
+        "title" : "Basic Metrics",
+        "id" : "basic-metrics"
+      }, {
+        "title" : "Treating as a Collection",
+        "id" : "treating-as-a-collection"
+      }, {
+        "title" : "Finding Overlaps",
+        "id" : "finding-overlaps"
+      }, {
+        "title" : "Intersection",
+        "id" : "intersection"
+      }, {
+        "title" : "Flattening",
+        "id" : "flattening"
+      }, {
+        "title" : "Assigning Properties",
+        "id" : "assigning-properties"
+      } ]
+    }
+  }
+}), document.getElementById("znai"));
+/*-->*/
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" /> 
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"> 
+<title>Groovy NGS: Introduction</title>
+<link rel="stylesheet" type="text/css" href="/userguide/static/css/katex.min.css">
+<link rel="stylesheet" type="text/css" href="/userguide/static/main.css">
+<link rel="stylesheet" type="text/css" href="/userguide/static/css/global-overrides.css">
+</head>
+<link rel="shortcut icon" href="/userguide/favicon.png"type="image/ico"/>
+<body class="theme-znai-dark">
+<script>(function() {
+    var themeNameKey = 'znaiTheme';
+    var darkThemeName = 'znai-dark';
+    var lightThemeName = 'default';
+
+    var znaiTheme = {
+        changeHandlers: [],
+        addChangeHandler(handler) {
+            this.changeHandlers.push(handler);
+        },
+        removeChangeHandler(handler) {
+            var idx = this.changeHandlers.indexOf(handler);
+            this.changeHandlers.splice(idx, 1);
+        },
+        set(name) {
+            this.name = name;
+            document.body.className = 'theme-' + name;
+
+            var idx = 0;
+            var len = this.changeHandlers.length;
+            for (; idx < len; idx++) {
+                this.changeHandlers[idx](name);
+            }
+        },
+        setExplicitly(name) {
+            storeThemeName(name);
+            this.set(name);
+        },
+        setExplicitlyIfNotSetAlready(name) {
+            const themeName = getStoredThemeName();
+            if (themeName) {
+                return
+            }
+
+            this.setExplicitly(name)
+        },
+        toggle() {
+            this.setExplicitly(this.name === lightThemeName ? darkThemeName : lightThemeName)
+        }
+    };
+
+    var mediaThemeName = setLightMatchMediaListenerAndGetThemeName()
+    var themeName = getStoredThemeName() || mediaThemeName;
+    znaiTheme.set(themeName);
+
+    window.znaiTheme = znaiTheme;
+
+    function getStoredThemeName() {
+        return localStorage.getItem(themeNameKey);
+    }
+
+    function storeThemeName(name) {
+        return localStorage.setItem(themeNameKey, name);
+    }
+
+    function setLightMatchMediaListenerAndGetThemeName() {
+        if (!window.matchMedia) {
+            return darkThemeName;
+        }
+
+        var lightQuery = window.matchMedia('(prefers-color-scheme: light)');
+        lightQuery.addListener(function (e) {
+            const newThemeName = e.matches ? lightThemeName : darkThemeName;
+            znaiTheme.setExplicitly(newThemeName);
+        });
+
+        return lightQuery.matches ? lightThemeName : darkThemeName;
+    }
+})()</script>
+<div id="znai"><div id="znai-initial-page-loading" style="margin: -20px 0 0 -20px; padding: 0 40px 40px 0; width: 100vw; height: 100vh; display: flex; justify-content: center; align-items: center">
+    <div></div>
+</div><section style="max-width: 640px; margin-left: auto; margin-right: auto;">
+<article>
+<header><h1>What is Groovy NGS?</h1></header>
+<p>Welcome to Groovy NGS!Groovy NGS tries to unlock the power of the JVM as a scripting and rapid application development platform for analysis of genomic sequencing data (particularly, NGS data). It does this by building on the popular https://github.com/samtools/htsjdk HTSJDK library to make its functionality greatly more accessible - primarily, by exposing it in an idiomatic way in the Groovy JVM language.</p>
+</article>
+
+<article>
+<header><h1>Why Groovy?</h1></header>
+<p>Groovy is a dynamic programming language that is widely used for scripting, domain specific languages (such as https://bpipe.org Bpipe and https://nextflow.io Nextflow) as well as full applications. It brings a unique blend of high performance and dynamic features that are ideal for rapid application development and interactive analysis. In many ways, Groovy is similar to Python from a language point of view, but without the downsides of Python such as slow performance and parallelisation capabilities, and with seamless integration into the enormous Java library ecosystem.</p>
+</article>
+
+<article>
+<header><h1>Structure</h1></header>
+<p>This guide first presents some conceptual and foundational topics and then is split into sections based on the broad types categories of functionalities that are available.Chapter 1: Key foundations - installing, running and writing simple scripts Chapter 2: Working with Genomic Regions Chapter 3: Working with VCFs Chapter 4: Working with alignment files (BAM, CRAM) Chapter 5: Miscellaneous Utilities</p>
+</article>
+
+<article>
+<header><h1>API Documentation</h1></header>
+<p>This guide is designed to give you a user friendly introduction to Groovy NGS with plenty of examples and explanations. There are, however, many more details that are not contained here. To fully understand usage of the classes as well as important limitations, reference the https://ssadedin.github.io/groovy-ngs-utils/doc/ API documentation.</p>
+</article>
+</section>
+</div>
+<script type="text/javascript" src="/userguide/footer.js"></script>
+<script type="text/javascript" src="/userguide/toc.js"></script>
+<script type="text/javascript" src="/userguide/assets.js"></script>
+<script type="text/javascript" src="/userguide/static/main.js"></script>
+<script type="text/javascript" src="/userguide/search-index.js"></script>
+<script>
+document.getElementById('znai').innerHTML = '';
+/*<!--*/
+ReactDOM.render(React.createElement(Documentation, {
+  "docMeta" : {
+    "viewOn" : {
+      "link" : "https://github.com/ssadedin/groovy-ngs-utils",
+      "title" : "Groovy NGS"
+    },
+    "id" : "userguide",
+    "title" : "Groovy NGS",
+    "type" : "Guide",
+    "previewEnabled" : false
+  },
+  "page" : {
+    "type" : "Page",
+    "content" : [ {
+      "id" : "what-is-groovy-ngs",
+      "title" : "What is Groovy NGS?",
+      "type" : "Section",
+      "content" : [ {
+        "type" : "Paragraph",
+        "content" : [ {
+          "type" : "StrongEmphasis",
+          "content" : [ {
+            "text" : "Welcome to Groovy NGS!",
+            "type" : "SimpleText"
+          } ]
+        } ]
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "Groovy NGS tries to unlock the power of the JVM as a scripting and rapid application development platform",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "for analysis of genomic sequencing data (particularly,",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "NGS data). It does this by building on the popular ",
+          "type" : "SimpleText"
+        }, {
+          "url" : "https://github.com/samtools/htsjdk",
+          "isFile" : false,
+          "type" : "Link",
+          "content" : [ {
+            "text" : "HTSJDK",
+            "type" : "SimpleText"
+          } ]
+        }, {
+          "text" : "",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "library to make its functionality greatly more accessible - primarily, by exposing it in",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "an idiomatic way in the Groovy JVM language.",
+          "type" : "SimpleText"
+        } ]
+      } ]
+    }, {
+      "id" : "why-groovy",
+      "title" : "Why Groovy?",
+      "type" : "Section",
+      "content" : [ {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "Groovy is a dynamic programming language",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "that is widely used for scripting, domain specific languages",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "(such as ",
+          "type" : "SimpleText"
+        }, {
+          "url" : "https://bpipe.org",
+          "isFile" : false,
+          "type" : "Link",
+          "content" : [ {
+            "text" : "Bpipe",
+            "type" : "SimpleText"
+          } ]
+        }, {
+          "text" : " and ",
+          "type" : "SimpleText"
+        }, {
+          "url" : "https://nextflow.io",
+          "isFile" : false,
+          "type" : "Link",
+          "content" : [ {
+            "text" : "Nextflow",
+            "type" : "SimpleText"
+          } ]
+        }, {
+          "text" : ") as well as full",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "applications. It brings a unique",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "blend of high performance and dynamic features that are ideal for rapid",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "application development and interactive analysis. In many ways, Groovy is",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "similar to Python from a language point of view, but without the downsides of",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "Python such as slow performance and parallelisation capabilities, and with",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "seamless integration into the enormous Java library ecosystem.",
+          "type" : "SimpleText"
+        } ]
+      } ]
+    }, {
+      "id" : "structure",
+      "title" : "Structure",
+      "type" : "Section",
+      "content" : [ {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "This guide first presents some conceptual and foundational topics and then",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "is split into sections based on the broad types categories of functionalities that are",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "available.",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "bulletMarker" : "-",
+        "tight" : true,
+        "type" : "BulletList",
+        "content" : [ {
+          "type" : "ListItem",
+          "content" : [ {
+            "type" : "Paragraph",
+            "content" : [ {
+              "text" : "Chapter 1: Key foundations - installing, running and writing simple scripts",
+              "type" : "SimpleText"
+            } ]
+          } ]
+        }, {
+          "type" : "ListItem",
+          "content" : [ {
+            "type" : "Paragraph",
+            "content" : [ {
+              "text" : "Chapter 2: Working with Genomic Regions",
+              "type" : "SimpleText"
+            } ]
+          } ]
+        }, {
+          "type" : "ListItem",
+          "content" : [ {
+            "type" : "Paragraph",
+            "content" : [ {
+              "text" : "Chapter 3: Working with VCFs",
+              "type" : "SimpleText"
+            } ]
+          } ]
+        }, {
+          "type" : "ListItem",
+          "content" : [ {
+            "type" : "Paragraph",
+            "content" : [ {
+              "text" : "Chapter 4: Working with alignment files (BAM, CRAM)",
+              "type" : "SimpleText"
+            } ]
+          } ]
+        }, {
+          "type" : "ListItem",
+          "content" : [ {
+            "type" : "Paragraph",
+            "content" : [ {
+              "text" : "Chapter 5: Miscellaneous Utilities",
+              "type" : "SimpleText"
+            } ]
+          } ]
+        } ]
+      } ]
+    }, {
+      "id" : "api-documentation",
+      "title" : "API Documentation",
+      "type" : "Section",
+      "content" : [ {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "This guide is designed to give you a user friendly introduction to Groovy NGS with",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "plenty of examples and explanations. There are, however, many more details that",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "are not contained here. To fully understand usage of the classes as well as",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "important limitations, reference the ",
+          "type" : "SimpleText"
+        }, {
+          "url" : "https://ssadedin.github.io/groovy-ngs-utils/doc/",
+          "isFile" : false,
+          "type" : "Link",
+          "content" : [ {
+            "text" : "API documentation",
+            "type" : "SimpleText"
+          } ]
+        }, {
+          "text" : ".",
+          "type" : "SimpleText"
+        } ]
+      } ]
+    } ],
+    "lastModifiedTime" : 1681554330793,
+    "tocItem" : {
+      "chapterTitle" : "Chapter One",
+      "pageTitle" : "Introduction",
+      "pageMeta" : { },
+      "dirName" : "chapter-one",
+      "fileName" : "introduction",
+      "viewOnRelativePath" : null,
+      "pageSectionIdTitles" : [ {
+        "title" : "What is Groovy NGS?",
+        "id" : "what-is-groovy-ngs"
+      }, {
+        "title" : "Why Groovy?",
+        "id" : "why-groovy"
+      }, {
+        "title" : "Structure",
+        "id" : "structure"
+      }, {
+        "title" : "API Documentation",
+        "id" : "api-documentation"
+      } ]
+    }
+  }
+}), document.getElementById("znai"));
+/*-->*/
+
+</script>
+
+</body>
+</html>

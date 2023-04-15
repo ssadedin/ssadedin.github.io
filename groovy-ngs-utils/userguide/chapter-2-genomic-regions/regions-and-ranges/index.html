@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" /> 
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"> 
+<title>Groovy NGS: Regions And Ranges</title>
+<link rel="stylesheet" type="text/css" href="/userguide/static/css/katex.min.css">
+<link rel="stylesheet" type="text/css" href="/userguide/static/main.css">
+<link rel="stylesheet" type="text/css" href="/userguide/static/css/global-overrides.css">
+</head>
+<link rel="shortcut icon" href="/userguide/favicon.png"type="image/ico"/>
+<body class="theme-znai-dark">
+<script>(function() {
+    var themeNameKey = 'znaiTheme';
+    var darkThemeName = 'znai-dark';
+    var lightThemeName = 'default';
+
+    var znaiTheme = {
+        changeHandlers: [],
+        addChangeHandler(handler) {
+            this.changeHandlers.push(handler);
+        },
+        removeChangeHandler(handler) {
+            var idx = this.changeHandlers.indexOf(handler);
+            this.changeHandlers.splice(idx, 1);
+        },
+        set(name) {
+            this.name = name;
+            document.body.className = 'theme-' + name;
+
+            var idx = 0;
+            var len = this.changeHandlers.length;
+            for (; idx < len; idx++) {
+                this.changeHandlers[idx](name);
+            }
+        },
+        setExplicitly(name) {
+            storeThemeName(name);
+            this.set(name);
+        },
+        setExplicitlyIfNotSetAlready(name) {
+            const themeName = getStoredThemeName();
+            if (themeName) {
+                return
+            }
+
+            this.setExplicitly(name)
+        },
+        toggle() {
+            this.setExplicitly(this.name === lightThemeName ? darkThemeName : lightThemeName)
+        }
+    };
+
+    var mediaThemeName = setLightMatchMediaListenerAndGetThemeName()
+    var themeName = getStoredThemeName() || mediaThemeName;
+    znaiTheme.set(themeName);
+
+    window.znaiTheme = znaiTheme;
+
+    function getStoredThemeName() {
+        return localStorage.getItem(themeNameKey);
+    }
+
+    function storeThemeName(name) {
+        return localStorage.setItem(themeNameKey, name);
+    }
+
+    function setLightMatchMediaListenerAndGetThemeName() {
+        if (!window.matchMedia) {
+            return darkThemeName;
+        }
+
+        var lightQuery = window.matchMedia('(prefers-color-scheme: light)');
+        lightQuery.addListener(function (e) {
+            const newThemeName = e.matches ? lightThemeName : darkThemeName;
+            znaiTheme.setExplicitly(newThemeName);
+        });
+
+        return lightQuery.matches ? lightThemeName : darkThemeName;
+    }
+})()</script>
+<div id="znai"><div id="znai-initial-page-loading" style="margin: -20px 0 0 -20px; padding: 0 40px 40px 0; width: 100vw; height: 100vh; display: flex; justify-content: center; align-items: center">
+    <div></div>
+</div><section style="max-width: 640px; margin-left: auto; margin-right: auto;">
+<article>
+<header><h1>Regions and Ranges</h1></header>
+<p>DNA is most commonly conceptualised as a set chromosomes or contigs represented by linear coordinate systems. Defining and manipulating spans within these spaces is therefore been critical to working with genomic data. Entities such as genes, exons, transcripts, variants, and many similar constructs are usually represented as coordinates within the genome, typically referred to as spans, ranges or regions. This section explains how to work with genomic regions in Groovy-NGS.Groovy itself provides interfaces and a small amount of native support for working with ranges of values, such as the https://docs.groovy-lang.org/latest/html/api/groovy/lang/Range.htm Range class. Unfortunately this support is very minimal, so Groovy-NGS builds on these to provide full featured range operation support. In general, the terminology is used as follows: Terminology Range : A contiguous sequence of genomic positions not qualfied by a contig / chromosome (defined by start and end position) Region : A range that is further associated with a specific sequence, ie: a chromosome, or contig. Operations treat Regions associated with different sequences as independent entities that do not interact. Note: for historical reasons, Groovy-NGS uses chr to refer to the contig or chromosome with which a Region is associated. For all intents and purposes, you may think of the chr as a contig, or even an abstract sequence name. Key Supporting Classes Formally, the key classes supporting range operations in Groovy-NGS are: Type Description [IRegion](https://ssadedin.github.io/groovy-ngs-utils/doc/gngs/IRegion.html) Core interface implemented by all data types that can interface with range operations - supports only contig and interval. Data types representing entities that are localisable to a specific position in the genome usually implement `IRegion` to specify their location. [Region](https://ssadedin.github.io/groovy-ngs-utils/doc/gngs/Region.html) A region implementation that is also a groovy [expando](https://docs.groovy-lang.org/latest/html/api/groovy/util/Expando.html). This means that you can set your own properties directly on this object, allowing convenient association of meta data or ancilliary information to the region in data analysis. [Regions](https://ssadedin.github.io/groovy-ngs-utils/doc/gngs/Regions.html) A collection of potentially overlapping `Region` objects, stored in indexed fashion for rapid lookup. Implementation Under the hood, Groovy-NGS stores each range in a Regions object using an index that enables efficient lookup. Unlike the commonly used approach of applying an https://en.wikipedia.org/wiki/Interval_tree Interval Tree, Groovy-NGS uses a boundary index. That is, when a new range is inserted, the two end points are inserted into a tree map ordered on position, specific to the chromosome / contig. At places where the range overlaps existing ranges already in the index, breakpoint entries are already inserted. This functionality is supported by the https://ssadedin.github.io/groovy-ngs-utils/doc/gngs/RangeIndex.html RangeIndex class.Note: the breakpoint index design allows for extremely rapid local lookup, but creates some worst case performance outcomes you may wish to look out for. In particular, the scenario where many small regions are inserted first and then a set of large regions are inserted after causes the insertion operation to become O(N) on the number of small regions. Now that HTSJDK offers a native https://samtools.github.io/htsjdk/javadoc/htsjdk/htsjdk/samtools/util/IntervalTree.html IntervalTree an implementation backed by this class may be considered to allow this worst case to be avoided. If you encounter the worst case described here, using the HTSJDK IntervalTree class instead may be an option.</p>
+</article>
+</section>
+</div>
+<script type="text/javascript" src="/userguide/footer.js"></script>
+<script type="text/javascript" src="/userguide/toc.js"></script>
+<script type="text/javascript" src="/userguide/assets.js"></script>
+<script type="text/javascript" src="/userguide/static/main.js"></script>
+<script type="text/javascript" src="/userguide/search-index.js"></script>
+<script>
+document.getElementById('znai').innerHTML = '';
+/*<!--*/
+ReactDOM.render(React.createElement(Documentation, {
+  "docMeta" : {
+    "viewOn" : {
+      "link" : "https://github.com/ssadedin/groovy-ngs-utils",
+      "title" : "Groovy NGS"
+    },
+    "id" : "userguide",
+    "title" : "Groovy NGS",
+    "type" : "Guide",
+    "previewEnabled" : false
+  },
+  "page" : {
+    "type" : "Page",
+    "content" : [ {
+      "id" : "regions-and-ranges",
+      "title" : "Regions and Ranges",
+      "type" : "Section",
+      "content" : [ {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "DNA is most commonly conceptualised as a set chromosomes or contigs represented",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "by linear coordinate systems. Defining and manipulating spans within these",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "spaces is therefore been critical to working with genomic data. Entities such as",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "genes, exons, transcripts, variants, and many similar constructs are usually",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "represented as coordinates within the genome, typically referred to as spans,",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "ranges or regions. This section explains how to work with genomic regions in",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "Groovy-NGS.",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "Groovy itself provides interfaces and a small amount of",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "native support for working with ranges of values, such as the ",
+          "type" : "SimpleText"
+        }, {
+          "url" : "https://docs.groovy-lang.org/latest/html/api/groovy/lang/Range.htm",
+          "isFile" : false,
+          "type" : "Link",
+          "content" : [ {
+            "text" : "Range",
+            "type" : "SimpleText"
+          } ]
+        }, {
+          "text" : " class. Unfortunately this support is very minimal, so Groovy-NGS builds on these to provide full featured range operation support. In general, the terminology is used as follows:",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "id" : "regions-and-ranges-terminology",
+        "level" : 2,
+        "title" : "Terminology",
+        "type" : "SubHeading"
+      }, {
+        "bulletMarker" : "-",
+        "tight" : true,
+        "type" : "BulletList",
+        "content" : [ {
+          "type" : "ListItem",
+          "content" : [ {
+            "type" : "Paragraph",
+            "content" : [ {
+              "type" : "StrongEmphasis",
+              "content" : [ {
+                "text" : "Range",
+                "type" : "SimpleText"
+              } ]
+            }, {
+              "text" : " : A contiguous sequence of genomic positions not qualfied by a contig / chromosome (defined by start and end position)",
+              "type" : "SimpleText"
+            } ]
+          } ]
+        }, {
+          "type" : "ListItem",
+          "content" : [ {
+            "type" : "Paragraph",
+            "content" : [ {
+              "type" : "StrongEmphasis",
+              "content" : [ {
+                "text" : "Region",
+                "type" : "SimpleText"
+              } ]
+            }, {
+              "text" : " : A range that is further associated with a specific sequence, ie: a chromosome, or contig. Operations treat Regions associated with different sequences as independent entities that do not interact.",
+              "type" : "SimpleText"
+            } ]
+          } ]
+        } ]
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "Note: for historical reasons, Groovy-NGS uses ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "chr",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " to refer to the contig or chromosome with which a",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "code" : "Region",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " is associated. For all intents and purposes, you may think of the ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "chr",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " as a contig, or even",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "an abstract sequence name.",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "id" : "regions-and-ranges-key-supporting-classes",
+        "level" : 2,
+        "title" : "Key Supporting Classes",
+        "type" : "SubHeading"
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "Formally, the key classes supporting range operations in Groovy-NGS are:",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "table" : {
+          "columns" : [ {
+            "title" : "Type"
+          }, {
+            "title" : "Description"
+          } ],
+          "data" : [ [ [ {
+            "type" : "Paragraph",
+            "content" : [ {
+              "url" : "https://ssadedin.github.io/groovy-ngs-utils/doc/gngs/IRegion.html",
+              "isFile" : false,
+              "type" : "Link",
+              "content" : [ {
+                "text" : "IRegion",
+                "type" : "SimpleText"
+              } ]
+            } ]
+          } ], [ {
+            "type" : "Paragraph",
+            "content" : [ {
+              "text" : "Core interface implemented by all data types that can interface with range operations - supports only contig and interval. Data types representing entities that are localisable to a specific position in the genome usually implement ",
+              "type" : "SimpleText"
+            }, {
+              "code" : "IRegion",
+              "type" : "InlinedCode"
+            }, {
+              "text" : " to specify their location.",
+              "type" : "SimpleText"
+            } ]
+          } ] ], [ [ {
+            "type" : "Paragraph",
+            "content" : [ {
+              "url" : "https://ssadedin.github.io/groovy-ngs-utils/doc/gngs/Region.html",
+              "isFile" : false,
+              "type" : "Link",
+              "content" : [ {
+                "text" : "Region",
+                "type" : "SimpleText"
+              } ]
+            } ]
+          } ], [ {
+            "type" : "Paragraph",
+            "content" : [ {
+              "text" : "A region implementation that is also a groovy ",
+              "type" : "SimpleText"
+            }, {
+              "url" : "https://docs.groovy-lang.org/latest/html/api/groovy/util/Expando.html",
+              "isFile" : false,
+              "type" : "Link",
+              "content" : [ {
+                "text" : "expando",
+                "type" : "SimpleText"
+              } ]
+            }, {
+              "text" : ". This means that you can set your own properties directly on this object, allowing convenient association of meta data or ancilliary information to the region in data analysis.",
+              "type" : "SimpleText"
+            } ]
+          } ] ], [ [ {
+            "type" : "Paragraph",
+            "content" : [ {
+              "url" : "https://ssadedin.github.io/groovy-ngs-utils/doc/gngs/Regions.html",
+              "isFile" : false,
+              "type" : "Link",
+              "content" : [ {
+                "text" : "Regions",
+                "type" : "SimpleText"
+              } ]
+            } ]
+          } ], [ {
+            "type" : "Paragraph",
+            "content" : [ {
+              "text" : "A collection of potentially overlapping ",
+              "type" : "SimpleText"
+            }, {
+              "code" : "Region",
+              "type" : "InlinedCode"
+            }, {
+              "text" : " objects, stored in indexed fashion for rapid lookup.",
+              "type" : "SimpleText"
+            } ]
+          } ] ] ]
+        },
+        "title" : "Range Data Types",
+        "anchorId" : "regions-and-ranges-key-supporting-classes-range-data-types",
+        "type" : "Table"
+      }, {
+        "id" : "regions-and-ranges-implementation",
+        "level" : 2,
+        "title" : "Implementation",
+        "type" : "SubHeading"
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "Under the hood, Groovy-NGS stores each range in a ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "Regions",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " object using an",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "index that enables efficient lookup. Unlike the commonly used approach of applying",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "an ",
+          "type" : "SimpleText"
+        }, {
+          "url" : "https://en.wikipedia.org/wiki/Interval_tree",
+          "isFile" : false,
+          "type" : "Link",
+          "content" : [ {
+            "text" : "Interval Tree",
+            "type" : "SimpleText"
+          } ]
+        }, {
+          "text" : ", Groovy-NGS uses",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "a boundary index. That is, when a new range is inserted, the two end points are inserted",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "into a tree map ordered on position, specific to the chromosome / contig. At places where",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "the range overlaps existing ranges already in the index, breakpoint entries are already",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "inserted. This functionality is supported by the ",
+          "type" : "SimpleText"
+        }, {
+          "url" : "https://ssadedin.github.io/groovy-ngs-utils/doc/gngs/RangeIndex.html",
+          "isFile" : false,
+          "type" : "Link",
+          "content" : [ {
+            "text" : "RangeIndex",
+            "type" : "SimpleText"
+          } ]
+        }, {
+          "text" : " class.",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "Note: the breakpoint index design allows for extremely rapid local lookup, but",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "creates",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "some worst case performance outcomes you may wish to look out for. In particular,",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "the scenario where many small regions are inserted first and then a set of large regions",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "are inserted after causes the insertion operation to become O(N) on the number",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "of small regions. Now that HTSJDK offers a native",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "url" : "https://samtools.github.io/htsjdk/javadoc/htsjdk/htsjdk/samtools/util/IntervalTree.html",
+          "isFile" : false,
+          "type" : "Link",
+          "content" : [ {
+            "text" : "IntervalTree",
+            "type" : "SimpleText"
+          } ]
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "an implementation backed by this class may be considered to allow this worst",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "case to be avoided. If you encounter the worst case described here, using the",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "HTSJDK ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "IntervalTree",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " class instead may be an option.",
+          "type" : "SimpleText"
+        } ]
+      } ]
+    } ],
+    "lastModifiedTime" : 1681381732950,
+    "tocItem" : {
+      "chapterTitle" : "Chapter 2 Genomic Regions",
+      "pageTitle" : "Regions And Ranges",
+      "pageMeta" : { },
+      "dirName" : "chapter-2-genomic-regions",
+      "fileName" : "regions-and-ranges",
+      "viewOnRelativePath" : null,
+      "pageSectionIdTitles" : [ {
+        "title" : "Regions and Ranges",
+        "id" : "regions-and-ranges"
+      } ]
+    }
+  }
+}), document.getElementById("znai"));
+/*-->*/
+
+</script>
+
+</body>
+</html>

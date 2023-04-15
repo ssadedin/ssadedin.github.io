@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" /> 
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"> 
+<title>Groovy NGS: Parsing Vcf Files</title>
+<link rel="stylesheet" type="text/css" href="/userguide/static/css/katex.min.css">
+<link rel="stylesheet" type="text/css" href="/userguide/static/main.css">
+<link rel="stylesheet" type="text/css" href="/userguide/static/css/global-overrides.css">
+</head>
+<link rel="shortcut icon" href="/userguide/favicon.png"type="image/ico"/>
+<body class="theme-znai-dark">
+<script>(function() {
+    var themeNameKey = 'znaiTheme';
+    var darkThemeName = 'znai-dark';
+    var lightThemeName = 'default';
+
+    var znaiTheme = {
+        changeHandlers: [],
+        addChangeHandler(handler) {
+            this.changeHandlers.push(handler);
+        },
+        removeChangeHandler(handler) {
+            var idx = this.changeHandlers.indexOf(handler);
+            this.changeHandlers.splice(idx, 1);
+        },
+        set(name) {
+            this.name = name;
+            document.body.className = 'theme-' + name;
+
+            var idx = 0;
+            var len = this.changeHandlers.length;
+            for (; idx < len; idx++) {
+                this.changeHandlers[idx](name);
+            }
+        },
+        setExplicitly(name) {
+            storeThemeName(name);
+            this.set(name);
+        },
+        setExplicitlyIfNotSetAlready(name) {
+            const themeName = getStoredThemeName();
+            if (themeName) {
+                return
+            }
+
+            this.setExplicitly(name)
+        },
+        toggle() {
+            this.setExplicitly(this.name === lightThemeName ? darkThemeName : lightThemeName)
+        }
+    };
+
+    var mediaThemeName = setLightMatchMediaListenerAndGetThemeName()
+    var themeName = getStoredThemeName() || mediaThemeName;
+    znaiTheme.set(themeName);
+
+    window.znaiTheme = znaiTheme;
+
+    function getStoredThemeName() {
+        return localStorage.getItem(themeNameKey);
+    }
+
+    function storeThemeName(name) {
+        return localStorage.setItem(themeNameKey, name);
+    }
+
+    function setLightMatchMediaListenerAndGetThemeName() {
+        if (!window.matchMedia) {
+            return darkThemeName;
+        }
+
+        var lightQuery = window.matchMedia('(prefers-color-scheme: light)');
+        lightQuery.addListener(function (e) {
+            const newThemeName = e.matches ? lightThemeName : darkThemeName;
+            znaiTheme.setExplicitly(newThemeName);
+        });
+
+        return lightQuery.matches ? lightThemeName : darkThemeName;
+    }
+})()</script>
+<div id="znai"><div id="znai-initial-page-loading" style="margin: -20px 0 0 -20px; padding: 0 40px 40px 0; width: 100vw; height: 100vh; display: flex; justify-content: center; align-items: center">
+    <div></div>
+</div><section style="max-width: 640px; margin-left: auto; margin-right: auto;">
+<article>
+<header><h1>Loading a VCF File</h1></header>
+<p>Groovy NGS provides a dedicated VCF parser designed to offer highly streamlined access to VCF information, via the https://ssadedin.github.io/groovy-ngs-utils/doc/gngs/VCF.html gngs.VCF class. This parser allows access to key header properties as well as full information about variants.To load a VCF into memory, use the https://ssadedin.github.io/groovy-ngs-utils/doc/gngs/VCF.html#parse(Closure) VCF.parse static method. This method accepts a closure which, if provided, is called for each variant to determine if the variant should be retained. This allows loading a subset of variants from a VCF. For example, here we load only variants on chromosome 22. Input groovy vcf = VCF.parse(&quot;test.vcf&quot;) { it.chr == 'chr22' } println &quot;The samples are: $vcf.samples&quot; println &quot;There are ${vcf.size()} variants on chr22&quot; Output text The samples are: [NA12877, NA12878, NA12879] There are 24 variants on chr22</p>
+</article>
+
+<article>
+<header><h1>Accessing Header Information Only</h1></header>
+<p>If access to the variant information is not required, you can avoid parsing the whole VCF by calling the constructor directly: Input groovy vcf = new VCF(&quot;test.vcf&quot;) println &quot;The samples are: $vcf.samples&quot; Output text The samples are: [NA12877, NA12878, NA12879]</p>
+</article>
+
+<article>
+<header><h1>Streaming Processing</h1></header>
+<p>For large VCFs it can be beneficial to process a VCF file line by line. In this case, the https://ssadedin.github.io/groovy-ngs-utils/doc/gngs/VCF.html#filter(java.lang.String,%20Closure) VCF.filter method can be used to process variants in streaming fashion. By default, the filter method reads from standard input and writes to standard output, but a file names can be provided to read from a file. groovy VCF.filter('test.vcf') { it.chr == 'chr22' // output only variants on chr22 to stdout }</p>
+</article>
+
+<article>
+<header><h1>Processing Variants in VCFs</h1></header>
+<p>Each variant is represented by an instance of the https://ssadedin.github.io/groovy-ngs-utils/doc/gngs/Variant.html gngs.Variant class which makes available detailed information about the variant. The VCF class implements the Iterable&lt;Variant&gt; interface, making available standard operations that are available on all Groovy https://docs.groovy-lang.org/latest/html/groovy-jdk/java/util/Iterator.html Iterators. Input groovy vcf = VCF.parse(&quot;test.vcf&quot;).countBy { it.type } Output text {SNP=22, DEL=1, INS=1}</p>
+</article>
+
+<article>
+<header><h1>Indexed VCFs</h1></header>
+<p>When accessing a small number of variants from a large VCF, it is more efficient to index the VCF and parse only the relevant lines. The https://ssadedin.github.io/groovy-ngs-utils/doc/gngs/VCFIndex.html gngs.VCFIndex class can be used to query variants within a specified genomic region. Input groovy index = new VCFIndex(&quot;test.vcf.gz&quot;) index.iterator(&quot;chr1&quot;, 13792200, 13792300).collect { it } Output text [chr1:13792284 G/T]</p>
+</article>
+</section>
+</div>
+<script type="text/javascript" src="/userguide/footer.js"></script>
+<script type="text/javascript" src="/userguide/toc.js"></script>
+<script type="text/javascript" src="/userguide/assets.js"></script>
+<script type="text/javascript" src="/userguide/static/main.js"></script>
+<script type="text/javascript" src="/userguide/search-index.js"></script>
+<script>
+document.getElementById('znai').innerHTML = '';
+/*<!--*/
+ReactDOM.render(React.createElement(Documentation, {
+  "docMeta" : {
+    "viewOn" : {
+      "link" : "https://github.com/ssadedin/groovy-ngs-utils",
+      "title" : "Groovy NGS"
+    },
+    "id" : "userguide",
+    "title" : "Groovy NGS",
+    "type" : "Guide",
+    "previewEnabled" : false
+  },
+  "page" : {
+    "type" : "Page",
+    "content" : [ {
+      "type" : "Paragraph",
+      "content" : [ {
+        "text" : "Groovy NGS provides a dedicated VCF parser designed to offer highly streamlined access to VCF",
+        "type" : "SimpleText"
+      }, {
+        "type" : "SoftLineBreak"
+      }, {
+        "text" : "information, via the ",
+        "type" : "SimpleText"
+      }, {
+        "url" : "https://ssadedin.github.io/groovy-ngs-utils/doc/gngs/VCF.html",
+        "isFile" : false,
+        "type" : "Link",
+        "content" : [ {
+          "text" : "gngs.VCF",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "text" : " class.",
+        "type" : "SimpleText"
+      }, {
+        "type" : "SoftLineBreak"
+      }, {
+        "text" : "This parser allows access to key header properties as well as full information about variants.",
+        "type" : "SimpleText"
+      } ]
+    }, {
+      "id" : "loading-a-vcf-file",
+      "title" : "Loading a VCF File",
+      "type" : "Section",
+      "content" : [ {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "To load a VCF into memory, use the ",
+          "type" : "SimpleText"
+        }, {
+          "url" : "https://ssadedin.github.io/groovy-ngs-utils/doc/gngs/VCF.html#parse(Closure)",
+          "isFile" : false,
+          "type" : "Link",
+          "content" : [ {
+            "text" : "VCF.parse",
+            "type" : "SimpleText"
+          } ]
+        }, {
+          "text" : "",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "static method. This method accepts a closure which, if provided, is called for each variant to determine if the variant",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "should be retained. This allows loading a subset of variants from a VCF. For example, here we load",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "only variants on chromosome 22.",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "columns" : [ {
+          "content" : [ {
+            "type" : "Paragraph",
+            "content" : [ {
+              "type" : "StrongEmphasis",
+              "content" : [ {
+                "text" : "Input",
+                "type" : "SimpleText"
+              } ]
+            } ]
+          }, {
+            "lang" : "groovy",
+            "snippet" : "vcf = VCF.parse(\"test.vcf\") {\n   it.chr == 'chr22'\n}\nprintln \"The samples are: $vcf.samples\"\nprintln \"There are ${vcf.size()} variants on chr22\"\n",
+            "lineNumber" : "",
+            "type" : "Snippet"
+          } ]
+        }, {
+          "content" : [ {
+            "type" : "Paragraph",
+            "content" : [ {
+              "type" : "StrongEmphasis",
+              "content" : [ {
+                "text" : "Output",
+                "type" : "SimpleText"
+              } ]
+            } ]
+          }, {
+            "lang" : "text",
+            "snippet" : "The samples are: [NA12877, NA12878, NA12879]\nThere are 24 variants on chr22\n",
+            "lineNumber" : "",
+            "type" : "Snippet"
+          } ]
+        } ],
+        "config" : { },
+        "type" : "Columns"
+      } ]
+    }, {
+      "id" : "accessing-header-information-only",
+      "title" : "Accessing Header Information Only",
+      "type" : "Section",
+      "content" : [ {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "If access to the variant information is not required, you can avoid parsing the whole VCF by calling",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "the constructor directly:",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "columns" : [ {
+          "content" : [ {
+            "type" : "Paragraph",
+            "content" : [ {
+              "type" : "StrongEmphasis",
+              "content" : [ {
+                "text" : "Input",
+                "type" : "SimpleText"
+              } ]
+            } ]
+          }, {
+            "lang" : "groovy",
+            "snippet" : "vcf = new VCF(\"test.vcf\")\nprintln \"The samples are: $vcf.samples\"\n",
+            "lineNumber" : "",
+            "type" : "Snippet"
+          } ]
+        }, {
+          "content" : [ {
+            "type" : "Paragraph",
+            "content" : [ {
+              "type" : "StrongEmphasis",
+              "content" : [ {
+                "text" : "Output",
+                "type" : "SimpleText"
+              } ]
+            } ]
+          }, {
+            "lang" : "text",
+            "snippet" : "The samples are: [NA12877, NA12878, NA12879]\n",
+            "lineNumber" : "",
+            "type" : "Snippet"
+          } ]
+        } ],
+        "config" : { },
+        "type" : "Columns"
+      } ]
+    }, {
+      "id" : "streaming-processing",
+      "title" : "Streaming Processing",
+      "type" : "Section",
+      "content" : [ {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "For large VCFs it can be beneficial to process a VCF file line by line. In this case, the",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "url" : "https://ssadedin.github.io/groovy-ngs-utils/doc/gngs/VCF.html#filter(java.lang.String,%20Closure)",
+          "isFile" : false,
+          "type" : "Link",
+          "content" : [ {
+            "text" : "VCF.filter",
+            "type" : "SimpleText"
+          } ]
+        }, {
+          "text" : " method",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "can be used to process variants in streaming fashion. By default, the ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "filter",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " method reads from standard",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "input and writes to standard output, but a file names can be provided to read from a file.",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "lang" : "groovy",
+        "snippet" : "VCF.filter('test.vcf') {\n   it.chr == 'chr22' // output only variants on chr22 to stdout\n}\n",
+        "lineNumber" : "",
+        "type" : "Snippet"
+      } ]
+    }, {
+      "id" : "processing-variants-in-vcfs",
+      "title" : "Processing Variants in VCFs",
+      "type" : "Section",
+      "content" : [ {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "Each variant is represented by an instance of the ",
+          "type" : "SimpleText"
+        }, {
+          "url" : "https://ssadedin.github.io/groovy-ngs-utils/doc/gngs/Variant.html",
+          "isFile" : false,
+          "type" : "Link",
+          "content" : [ {
+            "text" : "gngs.Variant",
+            "type" : "SimpleText"
+          } ]
+        }, {
+          "text" : "",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "class which makes available detailed information about the variant. The ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "VCF",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " class  implements the ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "Iterable<Variant>",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " interface,",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "making available standard operations that are available on all Groovy ",
+          "type" : "SimpleText"
+        }, {
+          "url" : "https://docs.groovy-lang.org/latest/html/groovy-jdk/java/util/Iterator.html",
+          "isFile" : false,
+          "type" : "Link",
+          "content" : [ {
+            "text" : "Iterators",
+            "type" : "SimpleText"
+          } ]
+        }, {
+          "text" : ".",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "columns" : [ {
+          "content" : [ {
+            "type" : "Paragraph",
+            "content" : [ {
+              "type" : "StrongEmphasis",
+              "content" : [ {
+                "text" : "Input",
+                "type" : "SimpleText"
+              } ]
+            } ]
+          }, {
+            "lang" : "groovy",
+            "snippet" : "vcf = VCF.parse(\"test.vcf\").countBy { it.type }\n",
+            "lineNumber" : "",
+            "type" : "Snippet"
+          } ]
+        }, {
+          "content" : [ {
+            "type" : "Paragraph",
+            "content" : [ {
+              "type" : "StrongEmphasis",
+              "content" : [ {
+                "text" : "Output",
+                "type" : "SimpleText"
+              } ]
+            } ]
+          }, {
+            "lang" : "text",
+            "snippet" : "{SNP=22, DEL=1, INS=1}\n",
+            "lineNumber" : "",
+            "type" : "Snippet"
+          } ]
+        } ],
+        "config" : { },
+        "type" : "Columns"
+      } ]
+    }, {
+      "id" : "indexed-vcfs",
+      "title" : "Indexed VCFs",
+      "type" : "Section",
+      "content" : [ {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "When accessing a small number of variants from a large VCF, it is more efficient to index the VCF and parse",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "only the relevant lines. The ",
+          "type" : "SimpleText"
+        }, {
+          "url" : "https://ssadedin.github.io/groovy-ngs-utils/doc/gngs/VCFIndex.html",
+          "isFile" : false,
+          "type" : "Link",
+          "content" : [ {
+            "text" : "gngs.VCFIndex",
+            "type" : "SimpleText"
+          } ]
+        }, {
+          "text" : " class",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "can be used to query variants within a specified genomic region.",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "columns" : [ {
+          "content" : [ {
+            "type" : "Paragraph",
+            "content" : [ {
+              "type" : "StrongEmphasis",
+              "content" : [ {
+                "text" : "Input",
+                "type" : "SimpleText"
+              } ]
+            } ]
+          }, {
+            "lang" : "groovy",
+            "snippet" : "index = new VCFIndex(\"test.vcf.gz\")\nindex.iterator(\"chr1\", 13792200, 13792300).collect { it }\n",
+            "lineNumber" : "",
+            "type" : "Snippet"
+          } ]
+        }, {
+          "content" : [ {
+            "type" : "Paragraph",
+            "content" : [ {
+              "type" : "StrongEmphasis",
+              "content" : [ {
+                "text" : "Output",
+                "type" : "SimpleText"
+              } ]
+            } ]
+          }, {
+            "lang" : "text",
+            "snippet" : "[chr1:13792284 G/T]\n",
+            "lineNumber" : "",
+            "type" : "Snippet"
+          } ]
+        } ],
+        "config" : { },
+        "type" : "Columns"
+      } ]
+    } ],
+    "lastModifiedTime" : 1681547305597,
+    "tocItem" : {
+      "chapterTitle" : "Chapter 3 Vcf Files",
+      "pageTitle" : "Parsing Vcf Files",
+      "pageMeta" : { },
+      "dirName" : "chapter-3-vcf-files",
+      "fileName" : "parsing-vcf-files",
+      "viewOnRelativePath" : null,
+      "pageSectionIdTitles" : [ {
+        "title" : "Loading a VCF File",
+        "id" : "loading-a-vcf-file"
+      }, {
+        "title" : "Accessing Header Information Only",
+        "id" : "accessing-header-information-only"
+      }, {
+        "title" : "Streaming Processing",
+        "id" : "streaming-processing"
+      }, {
+        "title" : "Processing Variants in VCFs",
+        "id" : "processing-variants-in-vcfs"
+      }, {
+        "title" : "Indexed VCFs",
+        "id" : "indexed-vcfs"
+      } ]
+    }
+  }
+}), document.getElementById("znai"));
+/*-->*/
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" /> 
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"> 
+<title>Groovy NGS: Loading And Saving</title>
+<link rel="stylesheet" type="text/css" href="/userguide/static/css/katex.min.css">
+<link rel="stylesheet" type="text/css" href="/userguide/static/main.css">
+<link rel="stylesheet" type="text/css" href="/userguide/static/css/global-overrides.css">
+</head>
+<link rel="shortcut icon" href="/userguide/favicon.png"type="image/ico"/>
+<body class="theme-znai-dark">
+<script>(function() {
+    var themeNameKey = 'znaiTheme';
+    var darkThemeName = 'znai-dark';
+    var lightThemeName = 'default';
+
+    var znaiTheme = {
+        changeHandlers: [],
+        addChangeHandler(handler) {
+            this.changeHandlers.push(handler);
+        },
+        removeChangeHandler(handler) {
+            var idx = this.changeHandlers.indexOf(handler);
+            this.changeHandlers.splice(idx, 1);
+        },
+        set(name) {
+            this.name = name;
+            document.body.className = 'theme-' + name;
+
+            var idx = 0;
+            var len = this.changeHandlers.length;
+            for (; idx < len; idx++) {
+                this.changeHandlers[idx](name);
+            }
+        },
+        setExplicitly(name) {
+            storeThemeName(name);
+            this.set(name);
+        },
+        setExplicitlyIfNotSetAlready(name) {
+            const themeName = getStoredThemeName();
+            if (themeName) {
+                return
+            }
+
+            this.setExplicitly(name)
+        },
+        toggle() {
+            this.setExplicitly(this.name === lightThemeName ? darkThemeName : lightThemeName)
+        }
+    };
+
+    var mediaThemeName = setLightMatchMediaListenerAndGetThemeName()
+    var themeName = getStoredThemeName() || mediaThemeName;
+    znaiTheme.set(themeName);
+
+    window.znaiTheme = znaiTheme;
+
+    function getStoredThemeName() {
+        return localStorage.getItem(themeNameKey);
+    }
+
+    function storeThemeName(name) {
+        return localStorage.setItem(themeNameKey, name);
+    }
+
+    function setLightMatchMediaListenerAndGetThemeName() {
+        if (!window.matchMedia) {
+            return darkThemeName;
+        }
+
+        var lightQuery = window.matchMedia('(prefers-color-scheme: light)');
+        lightQuery.addListener(function (e) {
+            const newThemeName = e.matches ? lightThemeName : darkThemeName;
+            znaiTheme.setExplicitly(newThemeName);
+        });
+
+        return lightQuery.matches ? lightThemeName : darkThemeName;
+    }
+})()</script>
+<div id="znai"><div id="znai-initial-page-loading" style="margin: -20px 0 0 -20px; padding: 0 40px 40px 0; width: 100vw; height: 100vh; display: flex; justify-content: center; align-items: center">
+    <div></div>
+</div><section style="max-width: 640px; margin-left: auto; margin-right: auto;">
+<article>
+<header><h1>Loading BED files</h1></header>
+<p>Regions are commonly loaded from and saved to BED files. Groovy NGS provides the https://ssadedin.github.io/groovy-ngs-utils/doc/gngs/BED.html BED class to read data from BED formatted files.The BED class is designed to work with both in-memory BED files and also provide a subset of operations that can work in streaming fashion with files on storage. Therefore its constructor accepts a file path but will not load the contents automatically. To load a Regions object into memory from a BED file, use the https://ssadedin.github.io/groovy-ngs-utils/doc/gngs/BED.html#load(java.util.Map) load method. Consider this bed file: text chr1 100 150 r1 chr2 190 250 r2 chr3 300 350 r3 Then we can load it to a regions object with: groovy bed = new BED(&quot;test.bed&quot;).load() assert bed.numberOfRanges == 3 This will load a minimalist version of the BED that does not include the fourth column (usually referred to as the name or id column in the BED file). This is designed to minimise memory use and the resultant Regions object does not support the assignment of additional properties. To load a fully functional Regions object, add the full:true optional parameter in either the constructor or the load function: groovy bed = new BED(&quot;test.bed&quot;, full:true).load() assert bed.numberOfRanges == 3 assert bed[0].id == &quot;r1&quot;</p>
+</article>
+
+<article>
+<header><h1>Saving BED files</h1></header>
+<p>To save data in BED format from a Regions object, use the https://ssadedin.github.io/groovy-ngs-utils/doc/gngs/Regions.html#save(java.lang.String) Regions.save method on the Regions object.By default, this will save the regions in the order they were loaded, without any additional columns. To add the id / name column as the fourth column, specify a closure that returns the value to store there using the extra attribute. For example, to save the above BED file with the same contents to a new file name, you would use: groovy bed.save('test2.bed', extra: { it.id }) It's common to want to save regions in sorted order (eg: so that the file can be indexed). To do this, supply the sorted attribute. If you supply the value true then the file will be written in sorted order using lexical sorting on the contig/chromosome name. This means that chr10 will follow directly after chr1 . You can sort in a custom order by setting the sorted attribute to your own implementation of a Comparator&lt;Region&gt; .If you would like to store chromosomes in genomic order (ie: chr2 follows chr1 ), Groovy NGS provides the https://ssadedin.github.io/groovy-ngs-utils/doc/gngs/NumericRegionComparator.html NumericRegionComparator class that you can use. For example: groovy bed.save('test2.bed', extra: { it.id }, sorted: new NumericRegionComparator())</p>
+</article>
+
+<article>
+<header><h1>Region Based Data Tables</h1></header>
+<p>It is common to encounter files stored in column based format (for example, tab separated) with genomic coordinates in some of the columns and other data in the remaining columns.To load this kind of data, use the https://ssadedin.github.io/groovy-ngs-utils/doc/gngs/RangedData.html RangedData class. This class expects a tab or comma separated file with headers defining the column names. The class will auto-detect data types for columns based on the contents of the first rows (numeric columns being parsed as numbers). By default the first 3 columns are interpreted as the contig / chromosome, start coordinate and end coordinate repsectively. However you can change this by providing the column indices for these in the constructor.Consider the following file: text chr start end name age chr1 100 120 simon 10 chr1 140 210 fred 15 chr1 190 250 jane 20 chr1 300 350 tom 13 We can load a Regions object with name and age populated as follows: regions = new RangedData(&quot;test.tsv&quot;).load() assert r[0].name == &quot;simon&quot; assert r[0].age == 10 For more details, see the https://ssadedin.github.io/groovy-ngs-utils/doc/gngs/RangedData.html RangedData class API documentation.</p>
+</article>
+</section>
+</div>
+<script type="text/javascript" src="/userguide/footer.js"></script>
+<script type="text/javascript" src="/userguide/toc.js"></script>
+<script type="text/javascript" src="/userguide/assets.js"></script>
+<script type="text/javascript" src="/userguide/static/main.js"></script>
+<script type="text/javascript" src="/userguide/search-index.js"></script>
+<script>
+document.getElementById('znai').innerHTML = '';
+/*<!--*/
+ReactDOM.render(React.createElement(Documentation, {
+  "docMeta" : {
+    "viewOn" : {
+      "link" : "https://github.com/ssadedin/groovy-ngs-utils",
+      "title" : "Groovy NGS"
+    },
+    "id" : "userguide",
+    "title" : "Groovy NGS",
+    "type" : "Guide",
+    "previewEnabled" : false
+  },
+  "page" : {
+    "type" : "Page",
+    "content" : [ {
+      "id" : "loading-bed-files",
+      "title" : "Loading BED files",
+      "type" : "Section",
+      "content" : [ {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "Regions are commonly loaded from and saved to BED files. Groovy NGS provides the",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "url" : "https://ssadedin.github.io/groovy-ngs-utils/doc/gngs/BED.html",
+          "isFile" : false,
+          "type" : "Link",
+          "content" : [ {
+            "text" : "BED",
+            "type" : "SimpleText"
+          } ]
+        }, {
+          "text" : " class to read data",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "from BED formatted files.",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "The BED class is designed to work with both in-memory BED files and also provide a subset of",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "operations that can work in streaming fashion with files on storage. Therefore its constructor",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "accepts a file path but will not load the contents automatically. To load a ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "Regions",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " object into",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "memory from a BED file, use the",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "url" : "https://ssadedin.github.io/groovy-ngs-utils/doc/gngs/BED.html#load(java.util.Map)",
+          "isFile" : false,
+          "type" : "Link",
+          "content" : [ {
+            "text" : "load",
+            "type" : "SimpleText"
+          } ]
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "method. Consider this bed file:",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "lang" : "text",
+        "snippet" : "chr1\t100\t150  r1\nchr2\t190\t250  r2\nchr3\t300\t350  r3\n",
+        "lineNumber" : "",
+        "title" : "test.bed",
+        "type" : "Snippet"
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "Then we can load it to a regions object with:",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "lang" : "groovy",
+        "snippet" : "bed = new BED(\"test.bed\").load()\nassert bed.numberOfRanges == 3\n",
+        "lineNumber" : "",
+        "type" : "Snippet"
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "This will load a minimalist version of the BED that does not include the",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "fourth column (usually referred to as the ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "name",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " or ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "id",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " column in the BED file).",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "This  is designed to minimise memory use and the resultant ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "Regions",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " object",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "does not support the assignment of additional properties. To load a",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "fully functional ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "Regions",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " object, add the ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "full:true",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " optional parameter",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "in either the constructor or the ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "load",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " function:",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "lang" : "groovy",
+        "snippet" : "bed = new BED(\"test.bed\", full:true).load()\nassert bed.numberOfRanges == 3\nassert bed[0].id == \"r1\"\n",
+        "lineNumber" : "",
+        "type" : "Snippet"
+      } ]
+    }, {
+      "id" : "saving-bed-files",
+      "title" : "Saving BED files",
+      "type" : "Section",
+      "content" : [ {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "To save data in BED format from a ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "Regions",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " object, use the ",
+          "type" : "SimpleText"
+        }, {
+          "url" : "https://ssadedin.github.io/groovy-ngs-utils/doc/gngs/Regions.html#save(java.lang.String)",
+          "isFile" : false,
+          "type" : "Link",
+          "content" : [ {
+            "text" : "Regions.save",
+            "type" : "SimpleText"
+          } ]
+        }, {
+          "text" : " method on the ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "Regions",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " object.",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "By default, this will save the regions in the order they were loaded, without any additional",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "columns. To add the ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "id",
+          "type" : "InlinedCode"
+        }, {
+          "text" : "/",
+          "type" : "SimpleText"
+        }, {
+          "code" : "name",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " column as the fourth column, specify a closure that returns the",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "value to store there using the ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "extra",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " attribute. For example, to save the above BED file",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "with the same contents to a new file name, you would use:",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "lang" : "groovy",
+        "snippet" : "bed.save('test2.bed', extra: { it.id })\n",
+        "lineNumber" : "",
+        "type" : "Snippet"
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "It's common to want to save regions in sorted order (eg: so that the file can be indexed). To do this,",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "supply the ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "sorted",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " attribute. If you supply the value ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "true",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " then the file will be written",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "in sorted order using lexical sorting on the contig/chromosome name. This means that ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "chr10",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " will follow",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "directly after ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "chr1",
+          "type" : "InlinedCode"
+        }, {
+          "text" : ".  You can sort in",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "a custom order by setting the ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "sorted",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " attribute to your own implementation of a ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "Comparator<Region>",
+          "type" : "InlinedCode"
+        }, {
+          "text" : ".",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "If you would like to store chromosomes in genomic order (ie: ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "chr2",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " follows ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "chr1",
+          "type" : "InlinedCode"
+        }, {
+          "text" : "), Groovy NGS provides",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "the ",
+          "type" : "SimpleText"
+        }, {
+          "url" : "https://ssadedin.github.io/groovy-ngs-utils/doc/gngs/NumericRegionComparator.html",
+          "isFile" : false,
+          "type" : "Link",
+          "content" : [ {
+            "text" : "NumericRegionComparator",
+            "type" : "SimpleText"
+          } ]
+        }, {
+          "text" : " class",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "that you can use. For example:",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "lang" : "groovy",
+        "snippet" : "bed.save('test2.bed', extra: { it.id }, sorted: new NumericRegionComparator())\n",
+        "lineNumber" : "",
+        "type" : "Snippet"
+      } ]
+    }, {
+      "id" : "region-based-data-tables",
+      "title" : "Region Based Data Tables",
+      "type" : "Section",
+      "content" : [ {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "It is common to encounter files stored in column based format (for example,",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "tab separated) with genomic coordinates in some of the columns and other data",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "in the remaining columns.",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "To load this kind of data, use the ",
+          "type" : "SimpleText"
+        }, {
+          "url" : "https://ssadedin.github.io/groovy-ngs-utils/doc/gngs/RangedData.html",
+          "isFile" : false,
+          "type" : "Link",
+          "content" : [ {
+            "text" : "RangedData",
+            "type" : "SimpleText"
+          } ]
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "class. This class expects a tab or comma separated file with headers defining the column names. The class",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "will auto-detect data types for columns based on the contents of the first rows (numeric columns being",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "parsed as numbers). By default the first 3 columns are interpreted as the contig / chromosome, start",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "coordinate and end coordinate repsectively. However you can change this by providing the column indices",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "for these in the constructor.",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "Consider the following file:",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "lang" : "text",
+        "snippet" : "chr\tstart\tend\tname\tage\nchr1\t100\t120\tsimon\t10\nchr1\t140\t210\tfred\t15\nchr1\t190\t250\tjane\t20\nchr1\t300\t350\ttom\t13\n",
+        "lineNumber" : "",
+        "title" : "test.tsv",
+        "type" : "Snippet"
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "We can load a ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "Regions",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " object with ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "name",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " and ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "age",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " populated as follows:",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "lang" : "",
+        "snippet" : "regions = new RangedData(\"test.tsv\").load()\n\nassert r[0].name == \"simon\"\nassert r[0].age == 10\n",
+        "lineNumber" : "",
+        "type" : "Snippet"
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "For more details, see the ",
+          "type" : "SimpleText"
+        }, {
+          "url" : "https://ssadedin.github.io/groovy-ngs-utils/doc/gngs/RangedData.html",
+          "isFile" : false,
+          "type" : "Link",
+          "content" : [ {
+            "text" : "RangedData",
+            "type" : "SimpleText"
+          } ]
+        }, {
+          "text" : " class",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "API documentation.",
+          "type" : "SimpleText"
+        } ]
+      } ]
+    } ],
+    "lastModifiedTime" : 1681546205446,
+    "tocItem" : {
+      "chapterTitle" : "Chapter 2 Genomic Regions",
+      "pageTitle" : "Loading And Saving",
+      "pageMeta" : { },
+      "dirName" : "chapter-2-genomic-regions",
+      "fileName" : "loading-and-saving",
+      "viewOnRelativePath" : null,
+      "pageSectionIdTitles" : [ {
+        "title" : "Loading BED files",
+        "id" : "loading-bed-files"
+      }, {
+        "title" : "Saving BED files",
+        "id" : "saving-bed-files"
+      }, {
+        "title" : "Region Based Data Tables",
+        "id" : "region-based-data-tables"
+      } ]
+    }
+  }
+}), document.getElementById("znai"));
+/*-->*/
+
+</script>
+
+</body>
+</html>

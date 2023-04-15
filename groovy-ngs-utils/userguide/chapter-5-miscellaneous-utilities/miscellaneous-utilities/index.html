@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" /> 
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"> 
+<title>Groovy NGS: Miscellaneous Utilities</title>
+<link rel="stylesheet" type="text/css" href="/userguide/static/css/katex.min.css">
+<link rel="stylesheet" type="text/css" href="/userguide/static/main.css">
+<link rel="stylesheet" type="text/css" href="/userguide/static/css/global-overrides.css">
+</head>
+<link rel="shortcut icon" href="/userguide/favicon.png"type="image/ico"/>
+<body class="theme-znai-dark">
+<script>(function() {
+    var themeNameKey = 'znaiTheme';
+    var darkThemeName = 'znai-dark';
+    var lightThemeName = 'default';
+
+    var znaiTheme = {
+        changeHandlers: [],
+        addChangeHandler(handler) {
+            this.changeHandlers.push(handler);
+        },
+        removeChangeHandler(handler) {
+            var idx = this.changeHandlers.indexOf(handler);
+            this.changeHandlers.splice(idx, 1);
+        },
+        set(name) {
+            this.name = name;
+            document.body.className = 'theme-' + name;
+
+            var idx = 0;
+            var len = this.changeHandlers.length;
+            for (; idx < len; idx++) {
+                this.changeHandlers[idx](name);
+            }
+        },
+        setExplicitly(name) {
+            storeThemeName(name);
+            this.set(name);
+        },
+        setExplicitlyIfNotSetAlready(name) {
+            const themeName = getStoredThemeName();
+            if (themeName) {
+                return
+            }
+
+            this.setExplicitly(name)
+        },
+        toggle() {
+            this.setExplicitly(this.name === lightThemeName ? darkThemeName : lightThemeName)
+        }
+    };
+
+    var mediaThemeName = setLightMatchMediaListenerAndGetThemeName()
+    var themeName = getStoredThemeName() || mediaThemeName;
+    znaiTheme.set(themeName);
+
+    window.znaiTheme = znaiTheme;
+
+    function getStoredThemeName() {
+        return localStorage.getItem(themeNameKey);
+    }
+
+    function storeThemeName(name) {
+        return localStorage.setItem(themeNameKey, name);
+    }
+
+    function setLightMatchMediaListenerAndGetThemeName() {
+        if (!window.matchMedia) {
+            return darkThemeName;
+        }
+
+        var lightQuery = window.matchMedia('(prefers-color-scheme: light)');
+        lightQuery.addListener(function (e) {
+            const newThemeName = e.matches ? lightThemeName : darkThemeName;
+            znaiTheme.setExplicitly(newThemeName);
+        });
+
+        return lightQuery.matches ? lightThemeName : darkThemeName;
+    }
+})()</script>
+<div id="znai"><div id="znai-initial-page-loading" style="margin: -20px 0 0 -20px; padding: 0 40px 40px 0; width: 100vw; height: 100vh; display: flex; justify-content: center; align-items: center">
+    <div></div>
+</div><section style="max-width: 640px; margin-left: auto; margin-right: auto;">
+<article>
+<header><h1>Creating Readers, Writers and Streams</h1></header>
+<p>It is very common to encounter files that are compressed in various different formats and often an annoyance to have to invoke dedicated APIs and libraries to read them depending on what exact format the user supplied.Groovy NGS supports a concept of a &quot;file like&quot; object that can represent a file in many different forms, from a File object, input stream object, or a plain path, all of which can be compressed with gzip or bgzip or uncompressed. Many of the classes in Groovy NGS will take an untyped &quot;file like&quot; argument which will be auto-detected to use the right process to create a Reader or Writer to handle the file.You can support similar functionality by calling the https://ssadedin.github.io/groovy-ngs-utils/doc/gngs/Utils.html#reader(def,%20Closure) Utils.reader and https://ssadedin.github.io/groovy-ngs-utils/doc/gngs/Utils.html#writer(java.lang.String) Utils.writer methods.</p>
+</article>
+
+<article>
+<header><h1>Formatting Tables</h1></header>
+<p>Markdown has become a de facto standard for writing documentation and reports. One of the more tedious aspects is formatting Markdown tables. Groovy NGS supplies a highly flexible function to format data in lists as tables. See Input groovy def data = [ [1,2,3], [4,5,6] ] Utils.table(['a','b','c'], data) Output text a | b | c --|---|-- 1 | 2 | 3 4 | 5 | 6</p>
+</article>
+
+<article>
+<header><h1>JupyterLab Support</h1></header>
+<p>Groovy NGS makes an excellent addition to using Groovy within a Jupyter Notebook (or JupyterLab).You can use any available Groovy kernel, however a particularly useful one is https://github.com/twosigma/beakerx BeakerX which provides Groovy kernels out of the box along with a range of Jupyter widgets as enhancements. Together with Groovy NGS. this makes a very effective data analysis platform for genomic data.To further support use within BeakerX, Groovy NGS provides some additional plots. These extend the existing BeakerX plots to provide distrubtion plots (based on kernel density estimates).The example below shows how the Groovy NGS density plot is displayed within a Jupyter Notebook. Input groovy r = new Random() data = (1..1000).collect { r.nextGaussian() } new Plot(title: &quot;Gaussian Distribution&quot;) &lt;&lt; \ new Density.Area(data:data) Output null guassian_distribution.png image</p>
+</article>
+
+<article>
+<header><h1>RefGene Database Access</h1></header>
+<p>An enormous amount of work in human genomics requires gene definitions. Groovy NGS provides support for loading and querying the UCSC RefGene database directly to enable access to gene and transcript definitions.The following example shows how to create the https://ssadedin.github.io/groovy-ngs-utils/doc/gngs/RefGenes.html RefGenes class and query gene information from it: Input groovy refgene = new RefGenes('refGene.txt.gz') refgene.getExons('DVL1') Output text 15 regions starting at chr1:1336142-1336516 The https://ssadedin.github.io/groovy-ngs-utils/doc/gngs/RefGenes.html RefGenes class provides a wealth of methods for querying gene information.Note: Support for Gencode is available in the gngs.gencode package. This support is functional but still under development and less tested than the RefGene support.</p>
+</article>
+</section>
+</div>
+<script type="text/javascript" src="/userguide/footer.js"></script>
+<script type="text/javascript" src="/userguide/toc.js"></script>
+<script type="text/javascript" src="/userguide/assets.js"></script>
+<script type="text/javascript" src="/userguide/static/main.js"></script>
+<script type="text/javascript" src="/userguide/search-index.js"></script>
+<script>
+document.getElementById('znai').innerHTML = '';
+/*<!--*/
+ReactDOM.render(React.createElement(Documentation, {
+  "docMeta" : {
+    "viewOn" : {
+      "link" : "https://github.com/ssadedin/groovy-ngs-utils",
+      "title" : "Groovy NGS"
+    },
+    "id" : "userguide",
+    "title" : "Groovy NGS",
+    "type" : "Guide",
+    "previewEnabled" : false
+  },
+  "page" : {
+    "type" : "Page",
+    "content" : [ {
+      "id" : "creating-readers-writers-and-streams",
+      "title" : "Creating Readers, Writers and Streams",
+      "type" : "Section",
+      "content" : [ {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "It is very common to encounter files that are compressed in various different formats",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "and often an annoyance to have to invoke dedicated APIs and libraries to",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "read them depending on what exact format the user supplied.",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "Groovy NGS supports a concept of a \"file like\" object that can represent a file",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "in many different forms, from a ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "File",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " object, input stream object, or a plain path, all of which",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "can be compressed with gzip or bgzip or uncompressed. Many of the classes in Groovy NGS",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "will take an untyped \"file like\" argument which will be auto-detected to use the right",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "process to create a ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "Reader",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " or ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "Writer",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " to handle the file.",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "You can support similar functionality by calling the ",
+          "type" : "SimpleText"
+        }, {
+          "url" : "https://ssadedin.github.io/groovy-ngs-utils/doc/gngs/Utils.html#reader(def,%20Closure)",
+          "isFile" : false,
+          "type" : "Link",
+          "content" : [ {
+            "text" : "Utils.reader",
+            "type" : "SimpleText"
+          } ]
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "and ",
+          "type" : "SimpleText"
+        }, {
+          "url" : "https://ssadedin.github.io/groovy-ngs-utils/doc/gngs/Utils.html#writer(java.lang.String)",
+          "isFile" : false,
+          "type" : "Link",
+          "content" : [ {
+            "text" : "Utils.writer",
+            "type" : "SimpleText"
+          } ]
+        }, {
+          "text" : " methods.",
+          "type" : "SimpleText"
+        } ]
+      } ]
+    }, {
+      "id" : "formatting-tables",
+      "title" : "Formatting Tables",
+      "type" : "Section",
+      "content" : [ {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "Markdown has become a de facto standard for writing documentation and reports. One of the more tedious",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "aspects is formatting Markdown tables. Groovy NGS supplies a highly flexible function to format data in lists",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "as tables. See",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "columns" : [ {
+          "content" : [ {
+            "type" : "Paragraph",
+            "content" : [ {
+              "type" : "StrongEmphasis",
+              "content" : [ {
+                "text" : "Input",
+                "type" : "SimpleText"
+              } ]
+            } ]
+          }, {
+            "lang" : "groovy",
+            "snippet" : "def data = [\n    [1,2,3],\n    [4,5,6]\n]\n\nUtils.table(['a','b','c'], data)\n",
+            "lineNumber" : "",
+            "type" : "Snippet"
+          } ]
+        }, {
+          "content" : [ {
+            "type" : "Paragraph",
+            "content" : [ {
+              "type" : "StrongEmphasis",
+              "content" : [ {
+                "text" : "Output",
+                "type" : "SimpleText"
+              } ]
+            } ]
+          }, {
+            "lang" : "text",
+            "snippet" : "a | b | c\n--|---|--\n1 | 2 | 3\n4 | 5 | 6\n",
+            "lineNumber" : "",
+            "type" : "Snippet"
+          } ]
+        } ],
+        "config" : { },
+        "type" : "Columns"
+      } ]
+    }, {
+      "id" : "jupyterlab-support",
+      "title" : "JupyterLab Support",
+      "type" : "Section",
+      "content" : [ {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "Groovy NGS makes an excellent addition to using Groovy within a Jupyter Notebook (or JupyterLab).",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "You can use any available Groovy kernel, however a",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "particularly useful one is ",
+          "type" : "SimpleText"
+        }, {
+          "url" : "https://github.com/twosigma/beakerx",
+          "isFile" : false,
+          "type" : "Link",
+          "content" : [ {
+            "text" : "BeakerX",
+            "type" : "SimpleText"
+          } ]
+        }, {
+          "text" : " which provides Groovy",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "kernels out of the box along with a range of Jupyter widgets as enhancements. Together with Groovy NGS.",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "this makes a very effective data analysis platform for genomic data.",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "To further support use within BeakerX, Groovy NGS provides some additional plots. These extend the existing",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "BeakerX plots to provide distrubtion plots (based on kernel density estimates).",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "The example below shows how the Groovy NGS density plot is displayed within a Jupyter Notebook.",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "columns" : [ {
+          "content" : [ {
+            "type" : "Paragraph",
+            "content" : [ {
+              "type" : "StrongEmphasis",
+              "content" : [ {
+                "text" : "Input",
+                "type" : "SimpleText"
+              } ]
+            } ]
+          }, {
+            "lang" : "groovy",
+            "snippet" : "r = new Random()\ndata = (1..1000).collect { r.nextGaussian() }\nnew Plot(title: \"Gaussian Distribution\") << \\\n    new Density.Area(data:data)\n",
+            "lineNumber" : "",
+            "type" : "Snippet"
+          } ]
+        }, {
+          "content" : [ {
+            "type" : "Paragraph",
+            "content" : [ {
+              "type" : "StrongEmphasis",
+              "content" : [ {
+                "text" : "Output",
+                "type" : "SimpleText"
+              } ]
+            }, {
+              "type" : "SoftLineBreak"
+            }, {
+              "destination" : "/userguide/chapter-5-miscellaneous-utilities/guassian_distribution.png",
+              "alt" : "image",
+              "width" : 650,
+              "title" : null,
+              "inlined" : true,
+              "timestamp" : 1681552870082,
+              "height" : 512,
+              "type" : "Image"
+            } ]
+          } ]
+        } ],
+        "config" : { },
+        "type" : "Columns"
+      } ]
+    }, {
+      "id" : "refgene-database-access",
+      "title" : "RefGene Database Access",
+      "type" : "Section",
+      "content" : [ {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "An enormous amount of work in human genomics requires gene definitions. Groovy NGS provides support for",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "loading and querying the UCSC RefGene database directly to enable access to gene and transcript definitions.",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "The following example shows how to create the ",
+          "type" : "SimpleText"
+        }, {
+          "url" : "https://ssadedin.github.io/groovy-ngs-utils/doc/gngs/RefGenes.html",
+          "isFile" : false,
+          "type" : "Link",
+          "content" : [ {
+            "text" : "RefGenes",
+            "type" : "SimpleText"
+          } ]
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "class and query gene information from it:",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "columns" : [ {
+          "content" : [ {
+            "type" : "Paragraph",
+            "content" : [ {
+              "type" : "StrongEmphasis",
+              "content" : [ {
+                "text" : "Input",
+                "type" : "SimpleText"
+              } ]
+            } ]
+          }, {
+            "lang" : "groovy",
+            "snippet" : "refgene = new RefGenes('refGene.txt.gz')\nrefgene.getExons('DVL1')\n",
+            "lineNumber" : "",
+            "type" : "Snippet"
+          } ]
+        }, {
+          "content" : [ {
+            "type" : "Paragraph",
+            "content" : [ {
+              "type" : "StrongEmphasis",
+              "content" : [ {
+                "text" : "Output",
+                "type" : "SimpleText"
+              } ]
+            } ]
+          }, {
+            "lang" : "text",
+            "snippet" : "15 regions starting at chr1:1336142-1336516\n",
+            "lineNumber" : "",
+            "type" : "Snippet"
+          } ]
+        } ],
+        "config" : { },
+        "type" : "Columns"
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "The ",
+          "type" : "SimpleText"
+        }, {
+          "url" : "https://ssadedin.github.io/groovy-ngs-utils/doc/gngs/RefGenes.html",
+          "isFile" : false,
+          "type" : "Link",
+          "content" : [ {
+            "text" : "RefGenes",
+            "type" : "SimpleText"
+          } ]
+        }, {
+          "text" : " class provides a wealth of methods",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "for querying gene information.",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "Note: Support for Gencode is available in the ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "gngs.gencode",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " package. This support is functional but still under development",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "and less tested than the RefGene support.",
+          "type" : "SimpleText"
+        } ]
+      } ]
+    } ],
+    "lastModifiedTime" : 1681553998383,
+    "tocItem" : {
+      "chapterTitle" : "Chapter 5 Miscellaneous Utilities",
+      "pageTitle" : "Miscellaneous Utilities",
+      "pageMeta" : { },
+      "dirName" : "chapter-5-miscellaneous-utilities",
+      "fileName" : "miscellaneous-utilities",
+      "viewOnRelativePath" : null,
+      "pageSectionIdTitles" : [ {
+        "title" : "Creating Readers, Writers and Streams",
+        "id" : "creating-readers-writers-and-streams"
+      }, {
+        "title" : "Formatting Tables",
+        "id" : "formatting-tables"
+      }, {
+        "title" : "JupyterLab Support",
+        "id" : "jupyterlab-support"
+      }, {
+        "title" : "RefGene Database Access",
+        "id" : "refgene-database-access"
+      } ]
+    }
+  }
+}), document.getElementById("znai"));
+/*-->*/
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" /> 
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"> 
+<title>Groovy NGS: Opening And Reading Alignment Files</title>
+<link rel="stylesheet" type="text/css" href="/userguide/static/css/katex.min.css">
+<link rel="stylesheet" type="text/css" href="/userguide/static/main.css">
+<link rel="stylesheet" type="text/css" href="/userguide/static/css/global-overrides.css">
+</head>
+<link rel="shortcut icon" href="/userguide/favicon.png"type="image/ico"/>
+<body class="theme-znai-dark">
+<script>(function() {
+    var themeNameKey = 'znaiTheme';
+    var darkThemeName = 'znai-dark';
+    var lightThemeName = 'default';
+
+    var znaiTheme = {
+        changeHandlers: [],
+        addChangeHandler(handler) {
+            this.changeHandlers.push(handler);
+        },
+        removeChangeHandler(handler) {
+            var idx = this.changeHandlers.indexOf(handler);
+            this.changeHandlers.splice(idx, 1);
+        },
+        set(name) {
+            this.name = name;
+            document.body.className = 'theme-' + name;
+
+            var idx = 0;
+            var len = this.changeHandlers.length;
+            for (; idx < len; idx++) {
+                this.changeHandlers[idx](name);
+            }
+        },
+        setExplicitly(name) {
+            storeThemeName(name);
+            this.set(name);
+        },
+        setExplicitlyIfNotSetAlready(name) {
+            const themeName = getStoredThemeName();
+            if (themeName) {
+                return
+            }
+
+            this.setExplicitly(name)
+        },
+        toggle() {
+            this.setExplicitly(this.name === lightThemeName ? darkThemeName : lightThemeName)
+        }
+    };
+
+    var mediaThemeName = setLightMatchMediaListenerAndGetThemeName()
+    var themeName = getStoredThemeName() || mediaThemeName;
+    znaiTheme.set(themeName);
+
+    window.znaiTheme = znaiTheme;
+
+    function getStoredThemeName() {
+        return localStorage.getItem(themeNameKey);
+    }
+
+    function storeThemeName(name) {
+        return localStorage.setItem(themeNameKey, name);
+    }
+
+    function setLightMatchMediaListenerAndGetThemeName() {
+        if (!window.matchMedia) {
+            return darkThemeName;
+        }
+
+        var lightQuery = window.matchMedia('(prefers-color-scheme: light)');
+        lightQuery.addListener(function (e) {
+            const newThemeName = e.matches ? lightThemeName : darkThemeName;
+            znaiTheme.setExplicitly(newThemeName);
+        });
+
+        return lightQuery.matches ? lightThemeName : darkThemeName;
+    }
+})()</script>
+<div id="znai"><div id="znai-initial-page-loading" style="margin: -20px 0 0 -20px; padding: 0 40px 40px 0; width: 100vw; height: 100vh; display: flex; justify-content: center; align-items: center">
+    <div></div>
+</div><section style="max-width: 640px; margin-left: auto; margin-right: auto;">
+<article>
+<header><h1>Introduction</h1></header>
+<p>Sequence alignments are central to working with genomic data. Groovy NGS supplies a wrapper class that adds idiomatic Groovy constructs to the underlying HTSJDK and Picard classes that provide Java support for working with genomic data. Unlike the support for genomic regions, this layer is a relatively thin wrapper since HTSJDK already provides a very effective API.</p>
+</article>
+
+<article>
+<header><h1>Opening BAM and CRAM Files</h1></header>
+<p>The core class for interacting with alignment files is the https://ssadedin.github.io/groovy-ngs-utils/doc/gngs/SAM.html SAM class. This class only works with indexed BAM, CRAM or SAM files. It provides a wealth of functions that allow highly efficient, streamlined access to reads within these formats.To creater a SAM object, just use the constructor: groovy bam = new SAM(&quot;test.bam&quot;) To see which contigs are in the file, you can access the contigs property: Input groovy bam.contigs Output text chrM=16571 chr1=249250621 chr2=243199373 chr3=198022430 ... To see which samples are in an alignment file, use the samples property: Input groovy bam.samples Output text [NA12878, NA12878] Note that each sample may be returned multiple times if there is more than one read group for the sample in the alignment file.</p>
+</article>
+
+<article>
+<header><h1>Accessing Reads</h1></header>
+<p>Reads within the SAM file are accessed using several different methods. The right method depends onwhether you want to access reads from a specific region if you need access to both pairs of paired end reads at the same time For basic access, use the https://ssadedin.github.io/groovy-ngs-utils/doc/gngs/SAM.html#eachRecord(java.util.Map,%20groovy.lang.Closure) eachRecord method to iterate over every read in the SAM file, one at a time: Input groovy count = 0 bam.eachRecord { ++count } println &quot;There are $count reads in the file&quot; Output text There are 1899 reads in the file Within the closure, a https://www.javadoc.io/doc/com.github.samtools/htsjdk/1.133/htsjdk/samtools/SAMRecord.html SAMRecord object is passed as an argument and all of its properties are accessible.For example, the maximum insert size could be calculated using the inferredInsertSize property of each SAMRecord object: Input groovy maxInsertSize = 0 bam.eachRecord { r -&gt; maxInsertSize = Math.max(maxInsertSize, Math.abs(r.inferredInsertSize)) } println &quot;The maximum insert size is $maxInsertSize&quot; Output text The maximum insert size is 114074 While eachRecord is a simple method, often a more idiomatic and functional style is achievable by using the https://ssadedin.github.io/groovy-ngs-utils/doc/gngs/SAM.html#withIterator(groovy.lang.Closure) withIterator which makes available a Groovy https://docs.groovy-lang.org/latest/html/groovy-jdk/java/util/Iterator.html Iterator, affording all of the usual Groovy enhancements that are available on iterator objects.For example, the same can be achieved with an iterator like so: Input groovy bam.withIterator { it*.inferredInsertSize.max() } Output text 114074 Accessing reads from a specific locus To access reads from a given locus, you can supply a Region object as a parameter to the withIterator or eachRecord methods to specify the region.</p>
+</article>
+
+<article>
+<header><h1>Accessing Paired Reads</h1></header>
+<p>It is often useful to access reads in their pairs. However, within coordinate sorted alignment files, paired reads may be spaced far apart which makes retrieval of the mate for each read potentially very expensive. Groovy NGS offers an optimised method, https://ssadedin.github.io/groovy-ngs-utils/doc/gngs/SAM.html#eachPair(groovy.lang.Closure) eachPair. Input groovy count = 0 bam.eachPair { r1, r2 -&gt; ++count} println &quot;There are $count read pairs&quot; Output text There are 942 read pairs Note: accessing read pairs can be memory intensive, as each read is buffered until its mate is found. Unpaired reads will not be output.</p>
+</article>
+
+<article>
+<header><h1>Generating Pileups</h1></header>
+<p>Genomic data often contains many reads covering any one position and it is of interest to access the full set of reads covering the position (known as a &quot;pileup&quot;). Groovy NGS offers several methods on the SAM class as well as a dedicated https://ssadedin.github.io/groovy-ngs-utils/doc/gngs/Pileup.html Pileup class to make generating pileups easier. Pileup at a Specific Position To generate a pileup at a specific position, use the https://ssadedin.github.io/groovy-ngs-utils/doc/gngs/SAM.html#pileup(java.lang.String,%20int) pileup method. This returns a Pileup object that can then be queried for summary information as well as the full list of reads covering the position: Input groovy p = bam.pileup('chr1',16890560) println &quot;There are ${p.alignments*.read.size()} reads at the position&quot; println &quot;There are ${p.summaryAsMap.C} C bases at the position&quot; Output text There are 3 reads at the position There are 3 C bases at the position From this we can see there are 3 reads which all have the base C at that position. Pileups at Multiple Positions Generating a pileup at a single position is very compute intensive as it requires fully scanning the context around the position to find all the reads. If you are analysing a whole region, you should instead create a PileupIterator over the whole region using the https://ssadedin.github.io/groovy-ngs-utils/doc/gngs/SAM.html#pileup(java.lang.String,%20int,%20int) pileup(chr,start,end) method. This will return an iterator that you can apply standard Groovy methods to enumerate the pileup state efficiently at each position within the range. Input groovy bam.pileup('chr1',16890550, 16890560 ).collect { p -&gt; p.alignments.size() } Output text [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3]</p>
+</article>
+
+<article>
+<header><h1>Calculating Coverage Depth</h1></header>
+<p>As seen above, coverage can be calculated using the pileup method on the SAM class. There are several direct methods for calculating coverage depth which are more efficient, however, including some that directly compute statistics for you: Input groovy bam.coverageStatistics('chr1',16890550, 16890560 ).mean Output text 2.090909090909091 Note that the object returned is an Apache commons-math https://commons.apache.org/proper/commons-math/javadocs/api-3.6.1/org/apache/commons/math3/stat/descriptive/SummaryStatistics.html SummaryStatistics object, allowing you to access any of its properties.</p>
+</article>
+</section>
+</div>
+<script type="text/javascript" src="/userguide/footer.js"></script>
+<script type="text/javascript" src="/userguide/toc.js"></script>
+<script type="text/javascript" src="/userguide/assets.js"></script>
+<script type="text/javascript" src="/userguide/static/main.js"></script>
+<script type="text/javascript" src="/userguide/search-index.js"></script>
+<script>
+document.getElementById('znai').innerHTML = '';
+/*<!--*/
+ReactDOM.render(React.createElement(Documentation, {
+  "docMeta" : {
+    "viewOn" : {
+      "link" : "https://github.com/ssadedin/groovy-ngs-utils",
+      "title" : "Groovy NGS"
+    },
+    "id" : "userguide",
+    "title" : "Groovy NGS",
+    "type" : "Guide",
+    "previewEnabled" : false
+  },
+  "page" : {
+    "type" : "Page",
+    "content" : [ {
+      "id" : "introduction",
+      "title" : "Introduction",
+      "type" : "Section",
+      "content" : [ {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "Sequence alignments are central to working with genomic data. Groovy NGS supplies a wrapper class",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "that adds idiomatic Groovy constructs to the underlying HTSJDK and Picard classes that provide",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "Java support for working with genomic data. Unlike the support for genomic regions, this layer",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "is a relatively thin wrapper since HTSJDK already provides a very effective API.",
+          "type" : "SimpleText"
+        } ]
+      } ]
+    }, {
+      "id" : "opening-bam-and-cram-files",
+      "title" : "Opening BAM and CRAM Files",
+      "type" : "Section",
+      "content" : [ {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "The core class for interacting with alignment files is the ",
+          "type" : "SimpleText"
+        }, {
+          "url" : "https://ssadedin.github.io/groovy-ngs-utils/doc/gngs/SAM.html",
+          "isFile" : false,
+          "type" : "Link",
+          "content" : [ {
+            "text" : "SAM",
+            "type" : "SimpleText"
+          } ]
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "class. This class ",
+          "type" : "SimpleText"
+        }, {
+          "type" : "Emphasis",
+          "content" : [ {
+            "text" : "only",
+            "type" : "SimpleText"
+          } ]
+        }, {
+          "text" : " works with indexed BAM, CRAM or SAM files. It provides a wealth of functions that allow",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "highly efficient, streamlined access to reads within these formats.",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "To creater a ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "SAM",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " object, just use the constructor:",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "lang" : "groovy",
+        "snippet" : "bam = new SAM(\"test.bam\")\n",
+        "lineNumber" : "",
+        "type" : "Snippet"
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "To see which contigs are in the file, you can access the ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "contigs",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " property:",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "columns" : [ {
+          "content" : [ {
+            "type" : "Paragraph",
+            "content" : [ {
+              "type" : "StrongEmphasis",
+              "content" : [ {
+                "text" : "Input",
+                "type" : "SimpleText"
+              } ]
+            } ]
+          }, {
+            "lang" : "groovy",
+            "snippet" : "bam.contigs\n",
+            "lineNumber" : "",
+            "type" : "Snippet"
+          } ]
+        }, {
+          "content" : [ {
+            "type" : "Paragraph",
+            "content" : [ {
+              "type" : "StrongEmphasis",
+              "content" : [ {
+                "text" : "Output",
+                "type" : "SimpleText"
+              } ]
+            } ]
+          }, {
+            "lang" : "text",
+            "snippet" : "chrM=16571\nchr1=249250621\nchr2=243199373\nchr3=198022430\n...\n",
+            "lineNumber" : "",
+            "type" : "Snippet"
+          } ]
+        } ],
+        "config" : { },
+        "type" : "Columns"
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "To see which samples are in an alignment file, use the ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "samples",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " property:",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "columns" : [ {
+          "content" : [ {
+            "type" : "Paragraph",
+            "content" : [ {
+              "type" : "StrongEmphasis",
+              "content" : [ {
+                "text" : "Input",
+                "type" : "SimpleText"
+              } ]
+            } ]
+          }, {
+            "lang" : "groovy",
+            "snippet" : "bam.samples\n",
+            "lineNumber" : "",
+            "type" : "Snippet"
+          } ]
+        }, {
+          "content" : [ {
+            "type" : "Paragraph",
+            "content" : [ {
+              "type" : "StrongEmphasis",
+              "content" : [ {
+                "text" : "Output",
+                "type" : "SimpleText"
+              } ]
+            } ]
+          }, {
+            "lang" : "text",
+            "snippet" : "[NA12878, NA12878]\n",
+            "lineNumber" : "",
+            "type" : "Snippet"
+          } ]
+        } ],
+        "config" : { },
+        "type" : "Columns"
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "Note that each sample may be returned multiple times if there is more than one read group for the sample",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "in the alignment file.",
+          "type" : "SimpleText"
+        } ]
+      } ]
+    }, {
+      "id" : "accessing-reads",
+      "title" : "Accessing Reads",
+      "type" : "Section",
+      "content" : [ {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "Reads within the ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "SAM",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " file are accessed using several different methods. The right method depends on",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "bulletMarker" : "-",
+        "tight" : true,
+        "type" : "BulletList",
+        "content" : [ {
+          "type" : "ListItem",
+          "content" : [ {
+            "type" : "Paragraph",
+            "content" : [ {
+              "text" : "whether you want to access reads from a specific region",
+              "type" : "SimpleText"
+            } ]
+          } ]
+        }, {
+          "type" : "ListItem",
+          "content" : [ {
+            "type" : "Paragraph",
+            "content" : [ {
+              "text" : "if you need access to both pairs of paired end reads at the same time",
+              "type" : "SimpleText"
+            } ]
+          } ]
+        } ]
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "For basic access, use the ",
+          "type" : "SimpleText"
+        }, {
+          "url" : "https://ssadedin.github.io/groovy-ngs-utils/doc/gngs/SAM.html#eachRecord(java.util.Map,%20groovy.lang.Closure)",
+          "isFile" : false,
+          "type" : "Link",
+          "content" : [ {
+            "text" : "eachRecord",
+            "type" : "SimpleText"
+          } ]
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "method to iterate over every read in the SAM file, one at a time:",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "columns" : [ {
+          "content" : [ {
+            "type" : "Paragraph",
+            "content" : [ {
+              "type" : "StrongEmphasis",
+              "content" : [ {
+                "text" : "Input",
+                "type" : "SimpleText"
+              } ]
+            } ]
+          }, {
+            "lang" : "groovy",
+            "snippet" : "count = 0\nbam.eachRecord { ++count }\nprintln \"There are $count reads in the file\"\n",
+            "lineNumber" : "",
+            "type" : "Snippet"
+          } ]
+        }, {
+          "content" : [ {
+            "type" : "Paragraph",
+            "content" : [ {
+              "type" : "StrongEmphasis",
+              "content" : [ {
+                "text" : "Output",
+                "type" : "SimpleText"
+              } ]
+            } ]
+          }, {
+            "lang" : "text",
+            "snippet" : "There are 1899 reads in the file\n",
+            "lineNumber" : "",
+            "type" : "Snippet"
+          } ]
+        } ],
+        "config" : { },
+        "type" : "Columns"
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "Within the closure, a ",
+          "type" : "SimpleText"
+        }, {
+          "url" : "https://www.javadoc.io/doc/com.github.samtools/htsjdk/1.133/htsjdk/samtools/SAMRecord.html",
+          "isFile" : false,
+          "type" : "Link",
+          "content" : [ {
+            "text" : "SAMRecord",
+            "type" : "SimpleText"
+          } ]
+        }, {
+          "text" : " object is passed",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "as an argument and all of its properties are accessible.",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "For example, the maximum insert size could be calculated using the ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "inferredInsertSize",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " property of each ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "SAMRecord",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " object:",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "columns" : [ {
+          "content" : [ {
+            "type" : "Paragraph",
+            "content" : [ {
+              "type" : "StrongEmphasis",
+              "content" : [ {
+                "text" : "Input",
+                "type" : "SimpleText"
+              } ]
+            } ]
+          }, {
+            "lang" : "groovy",
+            "snippet" : "maxInsertSize = 0\nbam.eachRecord { r ->\n    maxInsertSize = Math.max(maxInsertSize, Math.abs(r.inferredInsertSize))\n}\nprintln \"The maximum insert size is $maxInsertSize\"\n",
+            "lineNumber" : "",
+            "type" : "Snippet"
+          } ]
+        }, {
+          "content" : [ {
+            "type" : "Paragraph",
+            "content" : [ {
+              "type" : "StrongEmphasis",
+              "content" : [ {
+                "text" : "Output",
+                "type" : "SimpleText"
+              } ]
+            } ]
+          }, {
+            "lang" : "text",
+            "snippet" : "The maximum insert size is 114074\n",
+            "lineNumber" : "",
+            "type" : "Snippet"
+          } ]
+        } ],
+        "config" : { },
+        "type" : "Columns"
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "While ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "eachRecord",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " is a simple method, often a more idiomatic and functional style is achievable",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "by using the ",
+          "type" : "SimpleText"
+        }, {
+          "url" : "https://ssadedin.github.io/groovy-ngs-utils/doc/gngs/SAM.html#withIterator(groovy.lang.Closure)",
+          "isFile" : false,
+          "type" : "Link",
+          "content" : [ {
+            "text" : "withIterator",
+            "type" : "SimpleText"
+          } ]
+        }, {
+          "text" : "",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "which makes available a Groovy ",
+          "type" : "SimpleText"
+        }, {
+          "url" : "https://docs.groovy-lang.org/latest/html/groovy-jdk/java/util/Iterator.html",
+          "isFile" : false,
+          "type" : "Link",
+          "content" : [ {
+            "text" : "Iterator",
+            "type" : "SimpleText"
+          } ]
+        }, {
+          "text" : ", affording",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "all of the usual Groovy enhancements that are available on iterator objects.",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "For example, the same can be achieved with an iterator like so:",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "columns" : [ {
+          "content" : [ {
+            "type" : "Paragraph",
+            "content" : [ {
+              "type" : "StrongEmphasis",
+              "content" : [ {
+                "text" : "Input",
+                "type" : "SimpleText"
+              } ]
+            } ]
+          }, {
+            "lang" : "groovy",
+            "snippet" : "bam.withIterator { it*.inferredInsertSize.max() }\n",
+            "lineNumber" : "",
+            "type" : "Snippet"
+          } ]
+        }, {
+          "content" : [ {
+            "type" : "Paragraph",
+            "content" : [ {
+              "type" : "StrongEmphasis",
+              "content" : [ {
+                "text" : "Output",
+                "type" : "SimpleText"
+              } ]
+            } ]
+          }, {
+            "lang" : "text",
+            "snippet" : "114074\n",
+            "lineNumber" : "",
+            "type" : "Snippet"
+          } ]
+        } ],
+        "config" : { },
+        "type" : "Columns"
+      }, {
+        "id" : "accessing-reads-accessing-reads-from-a-specific-locus",
+        "level" : 2,
+        "title" : "Accessing reads from a specific locus",
+        "type" : "SubHeading"
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "To access reads from a given locus, you can supply a ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "Region",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " object as a parameter to the ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "withIterator",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " or ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "eachRecord",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " methods to",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "specify the region.",
+          "type" : "SimpleText"
+        } ]
+      } ]
+    }, {
+      "id" : "accessing-paired-reads",
+      "title" : "Accessing Paired Reads",
+      "type" : "Section",
+      "content" : [ {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "It is often useful to access reads in their pairs. However, within coordinate sorted alignment files, paired reads",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "may be spaced far apart which makes retrieval of the mate for each read potentially very expensive. Groovy NGS offers",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "an optimised method, ",
+          "type" : "SimpleText"
+        }, {
+          "url" : "https://ssadedin.github.io/groovy-ngs-utils/doc/gngs/SAM.html#eachPair(groovy.lang.Closure)",
+          "isFile" : false,
+          "type" : "Link",
+          "content" : [ {
+            "text" : "eachPair",
+            "type" : "SimpleText"
+          } ]
+        }, {
+          "text" : ".",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "columns" : [ {
+          "content" : [ {
+            "type" : "Paragraph",
+            "content" : [ {
+              "type" : "StrongEmphasis",
+              "content" : [ {
+                "text" : "Input",
+                "type" : "SimpleText"
+              } ]
+            } ]
+          }, {
+            "lang" : "groovy",
+            "snippet" : "count = 0\nbam.eachPair { r1, r2 -> ++count}\nprintln \"There are $count read pairs\"\n",
+            "lineNumber" : "",
+            "type" : "Snippet"
+          } ]
+        }, {
+          "content" : [ {
+            "type" : "Paragraph",
+            "content" : [ {
+              "type" : "StrongEmphasis",
+              "content" : [ {
+                "text" : "Output",
+                "type" : "SimpleText"
+              } ]
+            } ]
+          }, {
+            "lang" : "text",
+            "snippet" : "There are 942 read pairs\n",
+            "lineNumber" : "",
+            "type" : "Snippet"
+          } ]
+        } ],
+        "config" : { },
+        "type" : "Columns"
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "Note: accessing read pairs can be memory intensive, as each read is buffered until its mate is found. Unpaired reads",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "will not be output.",
+          "type" : "SimpleText"
+        } ]
+      } ]
+    }, {
+      "id" : "generating-pileups",
+      "title" : "Generating Pileups",
+      "type" : "Section",
+      "content" : [ {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "Genomic data often contains many reads covering any one position and it is of interest to",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "access the full set of reads covering the position (known as a \"pileup\"). Groovy NGS offers several",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "methods on the ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "SAM",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " class as well as a dedicated ",
+          "type" : "SimpleText"
+        }, {
+          "url" : "https://ssadedin.github.io/groovy-ngs-utils/doc/gngs/Pileup.html",
+          "isFile" : false,
+          "type" : "Link",
+          "content" : [ {
+            "text" : "Pileup",
+            "type" : "SimpleText"
+          } ]
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "class to make generating pileups easier.",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "id" : "generating-pileups-pileup-at-a-specific-position",
+        "level" : 2,
+        "title" : "Pileup at a Specific Position",
+        "type" : "SubHeading"
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "To generate a pileup at a specific position, use the ",
+          "type" : "SimpleText"
+        }, {
+          "url" : "https://ssadedin.github.io/groovy-ngs-utils/doc/gngs/SAM.html#pileup(java.lang.String,%20int)",
+          "isFile" : false,
+          "type" : "Link",
+          "content" : [ {
+            "text" : "pileup",
+            "type" : "SimpleText"
+          } ]
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "method. This returns a ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "Pileup",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " object that can then be queried for summary information as well as the full list of reads covering the position:",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "columns" : [ {
+          "content" : [ {
+            "type" : "Paragraph",
+            "content" : [ {
+              "type" : "StrongEmphasis",
+              "content" : [ {
+                "text" : "Input",
+                "type" : "SimpleText"
+              } ]
+            } ]
+          }, {
+            "lang" : "groovy",
+            "snippet" : "p = bam.pileup('chr1',16890560)\nprintln \"There are ${p.alignments*.read.size()} reads at the position\"\nprintln \"There are ${p.summaryAsMap.C} C bases at the position\"\n",
+            "lineNumber" : "",
+            "type" : "Snippet"
+          } ]
+        }, {
+          "content" : [ {
+            "type" : "Paragraph",
+            "content" : [ {
+              "type" : "StrongEmphasis",
+              "content" : [ {
+                "text" : "Output",
+                "type" : "SimpleText"
+              } ]
+            } ]
+          }, {
+            "lang" : "text",
+            "snippet" : "There are 3 reads at the position\nThere are 3 C bases at the position\n",
+            "lineNumber" : "",
+            "type" : "Snippet"
+          } ]
+        } ],
+        "config" : { },
+        "type" : "Columns"
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "From this we can see there are 3 reads which all have the base ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "C",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " at that position.",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "id" : "generating-pileups-pileups-at-multiple-positions",
+        "level" : 2,
+        "title" : "Pileups at Multiple Positions",
+        "type" : "SubHeading"
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "Generating a pileup at a single position is very compute intensive as it requires fully scanning",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "the context around the position to find all the reads. If you are analysing a whole region, you",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "should instead create a ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "PileupIterator",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " over the whole region using the ",
+          "type" : "SimpleText"
+        }, {
+          "url" : "https://ssadedin.github.io/groovy-ngs-utils/doc/gngs/SAM.html#pileup(java.lang.String,%20int,%20int)",
+          "isFile" : false,
+          "type" : "Link",
+          "content" : [ {
+            "text" : "pileup(chr,start,end)",
+            "type" : "SimpleText"
+          } ]
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "method. This will return an iterator that you can apply standard Groovy methods to enumerate the",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "pileup state efficiently at each position within the range.",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "columns" : [ {
+          "content" : [ {
+            "type" : "Paragraph",
+            "content" : [ {
+              "type" : "StrongEmphasis",
+              "content" : [ {
+                "text" : "Input",
+                "type" : "SimpleText"
+              } ]
+            } ]
+          }, {
+            "lang" : "groovy",
+            "snippet" : "bam.pileup('chr1',16890550, 16890560 ).collect { p ->  p.alignments.size() }\n",
+            "lineNumber" : "",
+            "type" : "Snippet"
+          } ]
+        }, {
+          "content" : [ {
+            "type" : "Paragraph",
+            "content" : [ {
+              "type" : "StrongEmphasis",
+              "content" : [ {
+                "text" : "Output",
+                "type" : "SimpleText"
+              } ]
+            } ]
+          }, {
+            "lang" : "text",
+            "snippet" : "[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3]\n",
+            "lineNumber" : "",
+            "type" : "Snippet"
+          } ]
+        } ],
+        "config" : { },
+        "type" : "Columns"
+      } ]
+    }, {
+      "id" : "calculating-coverage-depth",
+      "title" : "Calculating Coverage Depth",
+      "type" : "Section",
+      "content" : [ {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "As seen above, coverage can be calculated using the ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "pileup",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " method on the ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "SAM",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " class. There are several",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "direct methods for calculating coverage depth which are more efficient, however, including some that",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "directly compute statistics for you:",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "columns" : [ {
+          "content" : [ {
+            "type" : "Paragraph",
+            "content" : [ {
+              "type" : "StrongEmphasis",
+              "content" : [ {
+                "text" : "Input",
+                "type" : "SimpleText"
+              } ]
+            } ]
+          }, {
+            "lang" : "groovy",
+            "snippet" : "bam.coverageStatistics('chr1',16890550, 16890560 ).mean\n",
+            "lineNumber" : "",
+            "type" : "Snippet"
+          } ]
+        }, {
+          "content" : [ {
+            "type" : "Paragraph",
+            "content" : [ {
+              "type" : "StrongEmphasis",
+              "content" : [ {
+                "text" : "Output",
+                "type" : "SimpleText"
+              } ]
+            } ]
+          }, {
+            "lang" : "text",
+            "snippet" : "2.090909090909091\n",
+            "lineNumber" : "",
+            "type" : "Snippet"
+          } ]
+        } ],
+        "config" : { },
+        "type" : "Columns"
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "Note that the object returned is an Apache commons-math ",
+          "type" : "SimpleText"
+        }, {
+          "url" : "https://commons.apache.org/proper/commons-math/javadocs/api-3.6.1/org/apache/commons/math3/stat/descriptive/SummaryStatistics.html",
+          "isFile" : false,
+          "type" : "Link",
+          "content" : [ {
+            "text" : "SummaryStatistics",
+            "type" : "SimpleText"
+          } ]
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "object, allowing you to access any of its properties.",
+          "type" : "SimpleText"
+        } ]
+      } ]
+    } ],
+    "lastModifiedTime" : 1681420703120,
+    "tocItem" : {
+      "chapterTitle" : "Chapter 4 Alignment Files",
+      "pageTitle" : "Opening And Reading Alignment Files",
+      "pageMeta" : { },
+      "dirName" : "chapter-4-alignment-files",
+      "fileName" : "opening-and-reading-alignment-files",
+      "viewOnRelativePath" : null,
+      "pageSectionIdTitles" : [ {
+        "title" : "Introduction",
+        "id" : "introduction"
+      }, {
+        "title" : "Opening BAM and CRAM Files",
+        "id" : "opening-bam-and-cram-files"
+      }, {
+        "title" : "Accessing Reads",
+        "id" : "accessing-reads"
+      }, {
+        "title" : "Accessing Paired Reads",
+        "id" : "accessing-paired-reads"
+      }, {
+        "title" : "Generating Pileups",
+        "id" : "generating-pileups"
+      }, {
+        "title" : "Calculating Coverage Depth",
+        "id" : "calculating-coverage-depth"
+      } ]
+    }
+  }
+}), document.getElementById("znai"));
+/*-->*/
+
+</script>
+
+</body>
+</html>
