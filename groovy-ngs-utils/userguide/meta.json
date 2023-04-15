@@ -3,7 +3,7 @@
     "link" : "https://github.com/ssadedin/groovy-ngs-utils",
     "title" : "Groovy NGS"
   },
-  "id" : "userguide",
+  "id" : "groovy-ngs-utils/userguide",
   "title" : "Groovy NGS",
   "type" : "Guide",
   "previewEnabled" : false
