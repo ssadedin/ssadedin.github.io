@@ -1,1 +1,1 @@
-{"includePlugins":{},"fencePlugins":{"columns":{"count":17},"table":{"count":1,"params":["title"]}},"inlineCodePlugins":{}}
+{"includePlugins":{"image":{"count":4,"params":["scale"]}},"fencePlugins":{"columns":{"count":17},"table":{"count":1,"params":["title"]}},"inlineCodePlugins":{}}

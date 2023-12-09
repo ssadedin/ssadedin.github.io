@@ -205,13 +205,46 @@ toc = [ {
     } ]
   } ]
 }, {
-  "chapterTitle" : "Chapter 5 Miscellaneous Utilities",
-  "dirName" : "chapter-5-miscellaneous-utilities",
+  "chapterTitle" : "Chapter 5 Plotting",
+  "dirName" : "chapter-5-plotting",
   "items" : [ {
-    "chapterTitle" : "Chapter 5 Miscellaneous Utilities",
+    "chapterTitle" : "Chapter 5 Plotting",
+    "pageTitle" : "Plotting",
+    "pageMeta" : { },
+    "dirName" : "chapter-5-plotting",
+    "fileName" : "plotting",
+    "viewOnRelativePath" : null,
+    "pageSectionIdTitles" : [ {
+      "title" : "Basic Form of Plots",
+      "id" : "basic-form-of-plots"
+    }, {
+      "title" : "Saving Plots",
+      "id" : "saving-plots"
+    }, {
+      "title" : "Adding Data to Plots",
+      "id" : "adding-data-to-plots"
+    }, {
+      "title" : "Specifying Colors",
+      "id" : "specifying-colors"
+    }, {
+      "title" : "Adding Legends",
+      "id" : "adding-legends"
+    }, {
+      "title" : "Distribution Plots",
+      "id" : "distribution-plots"
+    }, {
+      "title" : "Accessing Generated Images",
+      "id" : "accessing-generated-images"
+    } ]
+  } ]
+}, {
+  "chapterTitle" : "Chapter 6 Miscellaneous Utilities",
+  "dirName" : "chapter-6-miscellaneous-utilities",
+  "items" : [ {
+    "chapterTitle" : "Chapter 6 Miscellaneous Utilities",
     "pageTitle" : "Miscellaneous Utilities",
     "pageMeta" : { },
-    "dirName" : "chapter-5-miscellaneous-utilities",
+    "dirName" : "chapter-6-miscellaneous-utilities",
     "fileName" : "miscellaneous-utilities",
     "viewOnRelativePath" : null,
     "pageSectionIdTitles" : [ {

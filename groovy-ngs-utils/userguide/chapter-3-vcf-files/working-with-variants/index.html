@@ -99,7 +99,7 @@
 
 <article>
 <header><h1>Querying VCFs for Presence of Variants</h1></header>
-<p>Finding out whether a particular variant is contained in a VCF is easy because the VCF class implements the Groovy https://groovy-lang.org/operators.html#_membership_operator membership operator which enables use of the in keyword. Hence we can query if a VCF contains a particular variant by using code such as: groovy vcf = VCF.parse('test.vcf') variant = vcf[0] if(variant in vcf) println &quot;Variant $v is in the VCF!&quot; Note: in testing whether a variant is &quot;in&quot; a VCF, the position and allele are compared. However, the dosage (zygosity) are not compared. Therefore, querying if a homozygous variant is present in a VCF that contains the VCF in heterozygous form will return true . In fact, even if the variant is present but genotyped as homozygous reference, the query will return true . To ascertain whether any sample has non-zero dosage for the variant, use the https://ssadedin.github.io/groovy-ngs-utils/doc/gngs/VCF.html#find(gngs.Variant) find to retrieve the variant and then directly query the dosages. For example: vcf.find(v).dosages.any { it &gt; 0 } Warning: this function may behave in unexpected ways when multi-allelic variants are used as query or target VCF. The find and in functions will match a variant in a VCF if any allele matches any allele in the query.</p>
+<p>Finding out whether a particular variant is contained in a VCF is easy because the VCF class implements the Groovy https://groovy-lang.org/operators.html#_membership_operator membership operator which enables use of the in keyword. Hence we can query if a VCF contains a particular variant by using code such as: groovy vcf = VCF.parse('test.vcf') variant = vcf[0] if(variant in vcf) println &quot;Variant $variant is in the VCF!&quot; Note: in testing whether a variant is &quot;in&quot; a VCF, the position and allele are compared. However, the dosage (zygosity) are not compared. Therefore, querying if a homozygous variant is present in a VCF that contains the VCF in heterozygous form will return true . In fact, even if the variant is present but genotyped as homozygous reference, the query will return true . To ascertain whether any sample has non-zero dosage for the variant, use the https://ssadedin.github.io/groovy-ngs-utils/doc/gngs/VCF.html#find(gngs.Variant) find to retrieve the variant and then directly query the dosages. For example: vcf.find(v).dosages.any { it &gt; 0 } Warning: this function may behave in unexpected ways when multi-allelic variants are used as query or target VCF. The find and in functions will match a variant in a VCF if any allele matches any allele in the query.</p>
 </article>
 
 <article>
@@ -620,7 +620,7 @@ ReactDOM.render(React.createElement(Documentation, {
         } ]
       }, {
         "lang" : "groovy",
-        "snippet" : "vcf = VCF.parse('test.vcf')\nvariant = vcf[0]\nif(variant in vcf)\n    println \"Variant $v is in the VCF!\"\n",
+        "snippet" : "vcf = VCF.parse('test.vcf')\nvariant = vcf[0]\nif(variant in vcf)\n    println \"Variant $variant is in the VCF!\"\n",
         "lineNumber" : "",
         "type" : "Snippet"
       }, {
@@ -898,7 +898,7 @@ ReactDOM.render(React.createElement(Documentation, {
         } ]
       } ]
     } ],
-    "lastModifiedTime" : 1681598247463,
+    "lastModifiedTime" : 1681599645120,
     "tocItem" : {
       "chapterTitle" : "Chapter 3 Vcf Files",
       "pageTitle" : "Working With Variants",

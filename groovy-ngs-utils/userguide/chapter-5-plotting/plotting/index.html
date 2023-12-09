@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" /> 
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"> 
+<title>Groovy NGS: Plotting</title>
+<link rel="stylesheet" type="text/css" href="/groovy-ngs-utils/userguide/static/css/katex.min.css">
+<link rel="stylesheet" type="text/css" href="/groovy-ngs-utils/userguide/static/main.css">
+<link rel="stylesheet" type="text/css" href="/groovy-ngs-utils/userguide/static/css/global-overrides.css">
+</head>
+<link rel="shortcut icon" href="/groovy-ngs-utils/userguide/favicon.png"type="image/ico"/>
+<body class="theme-znai-dark">
+<script>(function() {
+    var themeNameKey = 'znaiTheme';
+    var darkThemeName = 'znai-dark';
+    var lightThemeName = 'default';
+
+    var znaiTheme = {
+        changeHandlers: [],
+        addChangeHandler(handler) {
+            this.changeHandlers.push(handler);
+        },
+        removeChangeHandler(handler) {
+            var idx = this.changeHandlers.indexOf(handler);
+            this.changeHandlers.splice(idx, 1);
+        },
+        set(name) {
+            this.name = name;
+            document.body.className = 'theme-' + name;
+
+            var idx = 0;
+            var len = this.changeHandlers.length;
+            for (; idx < len; idx++) {
+                this.changeHandlers[idx](name);
+            }
+        },
+        setExplicitly(name) {
+            storeThemeName(name);
+            this.set(name);
+        },
+        setExplicitlyIfNotSetAlready(name) {
+            const themeName = getStoredThemeName();
+            if (themeName) {
+                return
+            }
+
+            this.setExplicitly(name)
+        },
+        toggle() {
+            this.setExplicitly(this.name === lightThemeName ? darkThemeName : lightThemeName)
+        }
+    };
+
+    var mediaThemeName = setLightMatchMediaListenerAndGetThemeName()
+    var themeName = getStoredThemeName() || mediaThemeName;
+    znaiTheme.set(themeName);
+
+    window.znaiTheme = znaiTheme;
+
+    function getStoredThemeName() {
+        return localStorage.getItem(themeNameKey);
+    }
+
+    function storeThemeName(name) {
+        return localStorage.setItem(themeNameKey, name);
+    }
+
+    function setLightMatchMediaListenerAndGetThemeName() {
+        if (!window.matchMedia) {
+            return darkThemeName;
+        }
+
+        var lightQuery = window.matchMedia('(prefers-color-scheme: light)');
+        lightQuery.addListener(function (e) {
+            const newThemeName = e.matches ? lightThemeName : darkThemeName;
+            znaiTheme.setExplicitly(newThemeName);
+        });
+
+        return lightQuery.matches ? lightThemeName : darkThemeName;
+    }
+})()</script>
+<div id="znai"><div id="znai-initial-page-loading" style="margin: -20px 0 0 -20px; padding: 0 40px 40px 0; width: 100vw; height: 100vh; display: flex; justify-content: center; align-items: center">
+    <div></div>
+</div><section style="max-width: 640px; margin-left: auto; margin-right: auto;">
+<article>
+<header><h1>Basic Form of Plots</h1></header>
+<p>Visualisation of data is an extremely common task in working with genomic data. Unfortunately, the libraries available for generating plots in Java are mostly geared towards applications and are not as easy to use or feature rich for use with scientific data.To ease plot generation, Groovy NGS includes the https://github.com/eseifert/gral Gral plotting library to support generation of plots by default, allowing any APIs from this library to be called to create visualisations. As with many Java based plotting APIs however, it is not well integrated with data types typically used in data analysis, requiring many API calls to generate a simple plot. Groovy NGS therefore includes a set of wrappers that make generation of useful plots directly from raw data very ergonomic. These APIs are based around the plotting libraries supported in the https://github.com/twosigma/beakerx BeakerX JupyterLab Extenions, allowing the same plots that are generated in notebooks to then be easily used offline in command line applications.Plots are created by creating a Plot object: groovy import gngs.plot.* p = new Plot() Most attributes of the plots are passed using Groovy's https://docs.groovy-lang.org/latest/html/documentation/#_named_parameters Map Constructor idiom, such that plot-level features are mostly configured in the constructor by passing them as attributes. An example of a plot with title, axis labels and X and Y ranges set for the plot area is as follows: groovy p = new Plot( title: 'An example plot', xLabel: 'This is the x axis', yLabel: 'This is the y axis', xBound: [0, 10], yBound: [0, 30] )</p>
+</article>
+
+<article>
+<header><h1>Saving Plots</h1></header>
+<p>Once you have created a plot, you will likely want to save it to a file.This can easily be achieved by calling the save function: groovy p.save('example_plot.png') By default, images are saved resolution of 1024 x 800, but you can set this explicitly by passing width and height properties: groovy p.save('example_plot.png', width: 1600, height: 1200) At this stage, these will save an empty plot, because we have not added any data to it.</p>
+</article>
+
+<article>
+<header><h1>Adding Data to Plots</h1></header>
+<p>Data is added to plots by creating data objects and using Groovy's &lt;&lt; operator on the plot object. The data objects themselves are created using the same map-constructor style syntax, and can be Line , Bars , Points , or Area objects: groovy p &lt;&lt; new Line( x: [1,2,3,4,5], y: [1,4,9,16,25] ) Note that in most of these data objects, the actual position of the data points is expressed as x and y attributes of the objects.</p>
+</article>
+
+<article>
+<header><h1>Specifying Colors</h1></header>
+<p>Further attributes can be specified such as the color of the objects. The color can be specified as https://docs.oracle.com/javase%2F7%2Fdocs%2Fapi%2F%2F/java/awt/Color.html java.awt.Color objects, for which the built in predefined colors are often useful: groovy import java.awt.Color p &lt;&lt; new Line( x: [1,2,3,4,5], y: [1,4,9,16,25], color: Color.red ) p &lt;&lt; new Line( x: [1,2,3,4,5], y: [1,8,27,64,125], color: Color.blue )</p>
+</article>
+
+<article>
+<header><h1>Adding Legends</h1></header>
+<p>To add a legend to the plot, specify the displayName attribute on each data object to be drawn: groovy import java.awt.Color p &lt;&lt; new Line( x: [1,2,3,4,5], y: [1,4,9,16,25], color: Color.red, displayName: 'Square of Numbers' ) p &lt;&lt; new Line( x: [1,2,3,4,5], y: [1,8,27,64,125], color: Color.blue, displayName: 'Cube of Numbers' )</p>
+</article>
+
+<article>
+<header><h1>Distribution Plots</h1></header>
+<p>As they are very common to show overall data properties, Groovy NGS supports two kinds of distribution plots that are especially easy to create: Density plots and Histograms. groovy p = new Plot(title: 'Guassian Distribution') p &lt;&lt; new gngs.plot.bx.Density.Area( data: (1..100).collect { 5 + r.nextGaussian() } ) groovy h = new Histogram( title: &quot;Gaussian Distribution&quot;, data: (1..500).collect { 5 + r.nextGaussian() } )</p>
+</article>
+
+<article>
+<header><h1>Accessing Generated Images</h1></header>
+<p>If you want to add more to the generated plots or manipulate the image in additional ways, you can generate the https://docs.oracle.com/javase/8/docs/api/java/awt/image/BufferedImage.html BufferedImage directly and use standard Java features to draw on it: groovy BufferedImage image = p.image Graphics2D imageGraphics = image.createGraphics() imageGraphics.drawRect(10,10, 20,20) ... As with saving the plot, you can specify the resolution: groovy BufferedImage image = p.getImage(1600, 1200) ...</p>
+</article>
+</section>
+</div>
+<script type="text/javascript" src="/groovy-ngs-utils/userguide/footer.js"></script>
+<script type="text/javascript" src="/groovy-ngs-utils/userguide/toc.js"></script>
+<script type="text/javascript" src="/groovy-ngs-utils/userguide/assets.js"></script>
+<script type="text/javascript" src="/groovy-ngs-utils/userguide/static/main.js"></script>
+<script type="text/javascript" src="/groovy-ngs-utils/userguide/search-index.js"></script>
+<script>
+document.getElementById('znai').innerHTML = '';
+/*<!--*/
+ReactDOM.render(React.createElement(Documentation, {
+  "docMeta" : {
+    "viewOn" : {
+      "link" : "https://github.com/ssadedin/groovy-ngs-utils",
+      "title" : "Groovy NGS"
+    },
+    "id" : "groovy-ngs-utils/userguide",
+    "title" : "Groovy NGS",
+    "type" : "Guide",
+    "previewEnabled" : false
+  },
+  "page" : {
+    "type" : "Page",
+    "content" : [ {
+      "type" : "Paragraph",
+      "content" : [ {
+        "text" : "Visualisation of data is an extremely common task in working with genomic data. Unfortunately,",
+        "type" : "SimpleText"
+      }, {
+        "type" : "SoftLineBreak"
+      }, {
+        "text" : "the libraries available for generating plots in Java are mostly geared towards",
+        "type" : "SimpleText"
+      }, {
+        "type" : "SoftLineBreak"
+      }, {
+        "text" : "applications and are not as easy to use or feature rich for use with",
+        "type" : "SimpleText"
+      }, {
+        "type" : "SoftLineBreak"
+      }, {
+        "text" : "scientific data.",
+        "type" : "SimpleText"
+      } ]
+    }, {
+      "type" : "Paragraph",
+      "content" : [ {
+        "text" : "To ease plot generation, Groovy NGS includes the ",
+        "type" : "SimpleText"
+      }, {
+        "url" : "https://github.com/eseifert/gral",
+        "isFile" : false,
+        "type" : "Link",
+        "content" : [ {
+          "text" : "Gral",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "type" : "SoftLineBreak"
+      }, {
+        "text" : "plotting library to support generation of plots by default, allowing any",
+        "type" : "SimpleText"
+      }, {
+        "type" : "SoftLineBreak"
+      }, {
+        "text" : "APIs from this library to be called to  create visualisations. As with",
+        "type" : "SimpleText"
+      }, {
+        "type" : "SoftLineBreak"
+      }, {
+        "text" : "many Java based plotting APIs however, it is not well integrated with data types",
+        "type" : "SimpleText"
+      }, {
+        "type" : "SoftLineBreak"
+      }, {
+        "text" : "typically used in data analysis, requiring many API calls to generate a simple",
+        "type" : "SimpleText"
+      }, {
+        "type" : "SoftLineBreak"
+      }, {
+        "text" : "plot. Groovy NGS therefore includes a set of wrappers that make generation",
+        "type" : "SimpleText"
+      }, {
+        "type" : "SoftLineBreak"
+      }, {
+        "text" : "of useful plots directly from raw data very ergonomic. These APIs are based",
+        "type" : "SimpleText"
+      }, {
+        "type" : "SoftLineBreak"
+      }, {
+        "text" : "around the plotting libraries supported in",
+        "type" : "SimpleText"
+      }, {
+        "type" : "SoftLineBreak"
+      }, {
+        "text" : "the ",
+        "type" : "SimpleText"
+      }, {
+        "url" : "https://github.com/twosigma/beakerx",
+        "isFile" : false,
+        "type" : "Link",
+        "content" : [ {
+          "text" : "BeakerX JupyterLab Extenions",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "text" : ", allowing",
+        "type" : "SimpleText"
+      }, {
+        "type" : "SoftLineBreak"
+      }, {
+        "text" : "the same plots that are generated in notebooks to then be easily used offline in command",
+        "type" : "SimpleText"
+      }, {
+        "type" : "SoftLineBreak"
+      }, {
+        "text" : "line applications.",
+        "type" : "SimpleText"
+      } ]
+    }, {
+      "id" : "basic-form-of-plots",
+      "title" : "Basic Form of Plots",
+      "type" : "Section",
+      "content" : [ {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "Plots are created by creating a ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "Plot",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " object:",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "lang" : "groovy",
+        "snippet" : "import gngs.plot.*\n\np = new Plot()\n",
+        "lineNumber" : "",
+        "type" : "Snippet"
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "Most attributes of the plots are passed using Groovy's ",
+          "type" : "SimpleText"
+        }, {
+          "url" : "https://docs.groovy-lang.org/latest/html/documentation/#_named_parameters",
+          "isFile" : false,
+          "type" : "Link",
+          "content" : [ {
+            "text" : "Map Constructor",
+            "type" : "SimpleText"
+          } ]
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "idiom, such that plot-level features are mostly configured in the constructor by passing",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "them as attributes. An example of a plot with title, axis labels and X and Y ranges set for the",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "plot area is as follows:",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "lang" : "groovy",
+        "snippet" : "p = new Plot(\n    title: 'An example plot',\n    xLabel: 'This is the x axis',\n    yLabel: 'This is the y axis',\n    xBound: [0, 10],\n    yBound: [0, 30]\n)\n",
+        "lineNumber" : "",
+        "type" : "Snippet"
+      } ]
+    }, {
+      "id" : "saving-plots",
+      "title" : "Saving Plots",
+      "type" : "Section",
+      "content" : [ {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "Once you have created a plot, you will likely want to save it to a file.",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "This can easily be achieved by calling the ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "save",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " function:",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "lang" : "groovy",
+        "snippet" : "p.save('example_plot.png')\n",
+        "lineNumber" : "",
+        "type" : "Snippet"
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "By default, images are saved resolution of 1024 x 800, but you can set this",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "explicitly by passing ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "width",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " and ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "height",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " properties:",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "lang" : "groovy",
+        "snippet" : "p.save('example_plot.png', width: 1600, height: 1200)\n",
+        "lineNumber" : "",
+        "type" : "Snippet"
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "At this stage, these will save an empty plot, because we have not added any data to it.",
+          "type" : "SimpleText"
+        } ]
+      } ]
+    }, {
+      "id" : "adding-data-to-plots",
+      "title" : "Adding Data to Plots",
+      "type" : "Section",
+      "content" : [ {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "Data is added to plots by creating data objects and using Groovy's ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "<<",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " operator on the plot",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "object. The data objects themselves are created using the same map-constructor style syntax,",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "and can be ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "Line",
+          "type" : "InlinedCode"
+        }, {
+          "text" : ", ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "Bars",
+          "type" : "InlinedCode"
+        }, {
+          "text" : ", ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "Points",
+          "type" : "InlinedCode"
+        }, {
+          "text" : ", or ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "Area",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " objects:",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "lang" : "groovy",
+        "snippet" : "p << new Line(\n    x: [1,2,3,4,5],\n    y: [1,4,9,16,25]\n)\n",
+        "lineNumber" : "",
+        "type" : "Snippet"
+      }, {
+        "scale" : 0.5,
+        "imageSrc" : "/groovy-ngs-utils/userguide/chapter-5-plotting/example_plot.png",
+        "timestamp" : 1702157069119,
+        "shapes" : [ ],
+        "width" : 1346.0,
+        "height" : 1028.0,
+        "type" : "AnnotatedImage"
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "Note that in most of these data objects, the actual position of the data points is expressed",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "as ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "x",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " and ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "y",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " attributes of the objects.",
+          "type" : "SimpleText"
+        } ]
+      } ]
+    }, {
+      "id" : "specifying-colors",
+      "title" : "Specifying Colors",
+      "type" : "Section",
+      "content" : [ {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "Further attributes can be specified such as the color of the objects. The color can be",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "specified as ",
+          "type" : "SimpleText"
+        }, {
+          "url" : "https://docs.oracle.com/javase%2F7%2Fdocs%2Fapi%2F%2F/java/awt/Color.html",
+          "isFile" : false,
+          "type" : "Link",
+          "content" : [ {
+            "text" : "java.awt.Color",
+            "type" : "SimpleText"
+          } ]
+        }, {
+          "text" : "",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "objects, for which the built in predefined colors are often useful:",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "lang" : "groovy",
+        "snippet" : "import java.awt.Color\n\np << new Line(\n    x: [1,2,3,4,5],\n    y: [1,4,9,16,25],\n    color: Color.red\n)\n\np << new Line(\n    x: [1,2,3,4,5],\n    y: [1,8,27,64,125],\n    color: Color.blue\n)\n",
+        "lineNumber" : "",
+        "type" : "Snippet"
+      } ]
+    }, {
+      "id" : "adding-legends",
+      "title" : "Adding Legends",
+      "type" : "Section",
+      "content" : [ {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "To add a legend to the plot, specify the ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "displayName",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " attribute on each",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "data object to be drawn:",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "lang" : "groovy",
+        "snippet" : "import java.awt.Color\n\np << new Line(\n    x: [1,2,3,4,5],\n    y: [1,4,9,16,25],\n    color: Color.red,\n    displayName: 'Square of Numbers'\n)\n\np << new Line(\n    x: [1,2,3,4,5],\n    y: [1,8,27,64,125],\n    color: Color.blue,\n    displayName: 'Cube of Numbers'\n)\n",
+        "lineNumber" : "",
+        "type" : "Snippet"
+      }, {
+        "scale" : 0.5,
+        "imageSrc" : "/groovy-ngs-utils/userguide/chapter-5-plotting/example_plot2.png",
+        "timestamp" : 1702157541664,
+        "shapes" : [ ],
+        "width" : 1328.0,
+        "height" : 1006.0,
+        "type" : "AnnotatedImage"
+      } ]
+    }, {
+      "id" : "distribution-plots",
+      "title" : "Distribution Plots",
+      "type" : "Section",
+      "content" : [ {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "As they are very common to show overall data properties, Groovy NGS supports",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "two kinds of distribution plots that are especially easy to create: Density plots",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "and Histograms.",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "lang" : "groovy",
+        "snippet" : "p = new Plot(title: 'Guassian Distribution')\n\np << new gngs.plot.bx.Density.Area(\n       data: (1..100).collect { 5 +  r.nextGaussian() }\n    )\n",
+        "lineNumber" : "",
+        "type" : "Snippet"
+      }, {
+        "scale" : 0.5,
+        "imageSrc" : "/groovy-ngs-utils/userguide/chapter-5-plotting/density.png",
+        "timestamp" : 1702158052012,
+        "shapes" : [ ],
+        "width" : 1368.0,
+        "height" : 1024.0,
+        "type" : "AnnotatedImage"
+      }, {
+        "lang" : "groovy",
+        "snippet" : "h = new Histogram(\n   title: \"Gaussian Distribution\",\n   data: (1..500).collect { 5 +  r.nextGaussian() }\n)\n",
+        "lineNumber" : "",
+        "type" : "Snippet"
+      }, {
+        "scale" : 0.5,
+        "imageSrc" : "/groovy-ngs-utils/userguide/chapter-5-plotting/histogram.png",
+        "timestamp" : 1702158156348,
+        "shapes" : [ ],
+        "width" : 1300.0,
+        "height" : 1006.0,
+        "type" : "AnnotatedImage"
+      } ]
+    }, {
+      "id" : "accessing-generated-images",
+      "title" : "Accessing Generated Images",
+      "type" : "Section",
+      "content" : [ {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "If you want to add more to the generated plots or manipulate the image in",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "additional ways, you can generate the ",
+          "type" : "SimpleText"
+        }, {
+          "url" : "https://docs.oracle.com/javase/8/docs/api/java/awt/image/BufferedImage.html",
+          "isFile" : false,
+          "type" : "Link",
+          "content" : [ {
+            "text" : "BufferedImage",
+            "type" : "SimpleText"
+          } ]
+        }, {
+          "text" : "",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "directly and use standard Java features to draw on it:",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "lang" : "groovy",
+        "snippet" : "BufferedImage image = p.image\nGraphics2D imageGraphics = image.createGraphics()\nimageGraphics.drawRect(10,10, 20,20)\n...\n",
+        "lineNumber" : "",
+        "type" : "Snippet"
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "As with saving the plot, you can specify the resolution:",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "lang" : "groovy",
+        "snippet" : "BufferedImage image = p.getImage(1600, 1200)\n...\n",
+        "lineNumber" : "",
+        "type" : "Snippet"
+      } ]
+    } ],
+    "lastModifiedTime" : 1702158640223,
+    "tocItem" : {
+      "chapterTitle" : "Chapter 5 Plotting",
+      "pageTitle" : "Plotting",
+      "pageMeta" : { },
+      "dirName" : "chapter-5-plotting",
+      "fileName" : "plotting",
+      "viewOnRelativePath" : null,
+      "pageSectionIdTitles" : [ {
+        "title" : "Basic Form of Plots",
+        "id" : "basic-form-of-plots"
+      }, {
+        "title" : "Saving Plots",
+        "id" : "saving-plots"
+      }, {
+        "title" : "Adding Data to Plots",
+        "id" : "adding-data-to-plots"
+      }, {
+        "title" : "Specifying Colors",
+        "id" : "specifying-colors"
+      }, {
+        "title" : "Adding Legends",
+        "id" : "adding-legends"
+      }, {
+        "title" : "Distribution Plots",
+        "id" : "distribution-plots"
+      }, {
+        "title" : "Accessing Generated Images",
+        "id" : "accessing-generated-images"
+      } ]
+    }
+  }
+}), document.getElementById("znai"));
+/*-->*/
+
+</script>
+
+</body>
+</html>
