@@ -7,6 +7,7 @@ toc = [ {
     "pageMeta" : { },
     "dirName" : "",
     "fileName" : "index",
+    "fileExtension" : "",
     "viewOnRelativePath" : null,
     "pageSectionIdTitles" : [ {
       "title" : "Groovy NGS",
@@ -22,6 +23,7 @@ toc = [ {
     "pageMeta" : { },
     "dirName" : "chapter-one",
     "fileName" : "introduction",
+    "fileExtension" : "md",
     "viewOnRelativePath" : null,
     "pageSectionIdTitles" : [ {
       "title" : "What is Groovy NGS?",
@@ -42,6 +44,7 @@ toc = [ {
     "pageMeta" : { },
     "dirName" : "chapter-one",
     "fileName" : "how-to-use-groovy-NGS",
+    "fileExtension" : "md",
     "viewOnRelativePath" : null,
     "pageSectionIdTitles" : [ {
       "title" : "As a Dependency In Projects",
@@ -66,6 +69,7 @@ toc = [ {
     "pageMeta" : { },
     "dirName" : "chapter-2-genomic-regions",
     "fileName" : "regions-and-ranges",
+    "fileExtension" : "md",
     "viewOnRelativePath" : null,
     "pageSectionIdTitles" : [ {
       "title" : "Regions and Ranges",
@@ -77,6 +81,7 @@ toc = [ {
     "pageMeta" : { },
     "dirName" : "chapter-2-genomic-regions",
     "fileName" : "common-operations",
+    "fileExtension" : "md",
     "viewOnRelativePath" : null,
     "pageSectionIdTitles" : [ {
       "title" : "Creating Regions Objects",
@@ -106,6 +111,7 @@ toc = [ {
     "pageMeta" : { },
     "dirName" : "chapter-2-genomic-regions",
     "fileName" : "loading-and-saving",
+    "fileExtension" : "md",
     "viewOnRelativePath" : null,
     "pageSectionIdTitles" : [ {
       "title" : "Loading BED files",
@@ -127,6 +133,7 @@ toc = [ {
     "pageMeta" : { },
     "dirName" : "chapter-3-vcf-files",
     "fileName" : "parsing-vcf-files",
+    "fileExtension" : "md",
     "viewOnRelativePath" : null,
     "pageSectionIdTitles" : [ {
       "title" : "Loading a VCF File",
@@ -150,6 +157,7 @@ toc = [ {
     "pageMeta" : { },
     "dirName" : "chapter-3-vcf-files",
     "fileName" : "working-with-variants",
+    "fileExtension" : "md",
     "viewOnRelativePath" : null,
     "pageSectionIdTitles" : [ {
       "title" : "General Notes",
@@ -183,6 +191,7 @@ toc = [ {
     "pageMeta" : { },
     "dirName" : "chapter-4-alignment-files",
     "fileName" : "opening-and-reading-alignment-files",
+    "fileExtension" : "md",
     "viewOnRelativePath" : null,
     "pageSectionIdTitles" : [ {
       "title" : "Introduction",
@@ -213,6 +222,7 @@ toc = [ {
     "pageMeta" : { },
     "dirName" : "chapter-5-plotting",
     "fileName" : "plotting",
+    "fileExtension" : "md",
     "viewOnRelativePath" : null,
     "pageSectionIdTitles" : [ {
       "title" : "Basic Form of Plots",
@@ -246,6 +256,7 @@ toc = [ {
     "pageMeta" : { },
     "dirName" : "chapter-6-miscellaneous-utilities",
     "fileName" : "miscellaneous-utilities",
+    "fileExtension" : "md",
     "viewOnRelativePath" : null,
     "pageSectionIdTitles" : [ {
       "title" : "Creating Readers, Writers and Streams",
