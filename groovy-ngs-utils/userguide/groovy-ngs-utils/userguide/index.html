@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" /> 
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"> 
+<title>Groovy NGS</title>
+<link rel="stylesheet" type="text/css" href="/groovy-ngs-utils/userguide/static/css/katex.min.css">
+<link rel="stylesheet" type="text/css" href="/groovy-ngs-utils/userguide/static/main.css">
+<link rel="stylesheet" type="text/css" href="/groovy-ngs-utils/userguide/static/css/global-overrides.css">
+</head>
+<link rel="shortcut icon" href="/groovy-ngs-utils/userguide/favicon.png"type="image/ico"/>
+<body class="theme-znai-dark">
+<script>(function() {
+    var themeNameKey = 'znaiTheme';
+    var darkThemeName = 'znai-dark';
+    var lightThemeName = 'default';
+
+    var znaiTheme = {
+        changeHandlers: [],
+        addChangeHandler(handler) {
+            this.changeHandlers.push(handler);
+        },
+        removeChangeHandler(handler) {
+            var idx = this.changeHandlers.indexOf(handler);
+            this.changeHandlers.splice(idx, 1);
+        },
+        set(name) {
+            this.name = name;
+            document.body.className = 'theme-' + name;
+
+            var idx = 0;
+            var len = this.changeHandlers.length;
+            for (; idx < len; idx++) {
+                this.changeHandlers[idx](name);
+            }
+        },
+        setExplicitly(name) {
+            storeThemeName(name);
+            this.set(name);
+        },
+        setExplicitlyIfNotSetAlready(name) {
+            const themeName = getStoredThemeName();
+            if (themeName) {
+                return
+            }
+
+            this.setExplicitly(name)
+        },
+        toggle() {
+            this.setExplicitly(this.name === lightThemeName ? darkThemeName : lightThemeName)
+        }
+    };
+
+    var mediaThemeName = setLightMatchMediaListenerAndGetThemeName()
+    var themeName = getStoredThemeName() || mediaThemeName;
+    znaiTheme.set(themeName);
+
+    window.znaiTheme = znaiTheme;
+
+    function getStoredThemeName() {
+        return localStorage.getItem(themeNameKey);
+    }
+
+    function storeThemeName(name) {
+        return localStorage.setItem(themeNameKey, name);
+    }
+
+    function setLightMatchMediaListenerAndGetThemeName() {
+        if (!window.matchMedia) {
+            return darkThemeName;
+        }
+
+        var lightQuery = window.matchMedia('(prefers-color-scheme: light)');
+        lightQuery.addListener(function (e) {
+            const newThemeName = e.matches ? lightThemeName : darkThemeName;
+            znaiTheme.setExplicitly(newThemeName);
+        });
+
+        return lightQuery.matches ? lightThemeName : darkThemeName;
+    }
+})()</script>
+<div id="znai"><div id="znai-initial-page-loading" style="margin: -20px 0 0 -20px; padding: 0 40px 40px 0; width: 100vw; height: 100vh; display: flex; justify-content: center; align-items: center">
+    <div></div>
+</div><section style="max-width: 640px; margin-left: auto; margin-right: auto;">
+<article>
+<header><h1>Groovy NGS</h1></header>
+<p>A toolkit for working with genomic sequencing data in Groovy.The JVM is a powerful platform for data analysis, offering high performance, strong library and platform support with excellent deployment options when it comes time to scale up and productionise your work. Groovy NGS aims to unlock the power of the JVM for working with genomic sequencing data by enabling it to be used with the versatile and highly productive Groovy programming language.Groovy NGS can be used at three levels:Directly as pre-written tools on the command line For writing simple scripts (bash-style) or interactive analysis in https://github.com/ssadedin/beakerx Jupyter Notebooks As a library of classes for building full-scale applications Under the hood, Groovy NGS is built on the widely used https://github.com/samtools/htsjdk HTSJDK. However Groovy NGS makes it much easier to work with these libraries by adding idiomatic Groovy language constructs and filling in important commonly used missing features.Examples of supported functionality are:Reading, processing and filtering VCF files, including integration with common annotation sources such as VEP Working with Genomic Ranges - full set of operation as well as higher level reading, processing and filtering Reading, processing and performing logical operations with pedigree (PED) files and family structures Working with BAM/SAM/CRAM files (including, generating and working with Pileups) A range of statistical operations including R-like data frames and linear modeling constructs Many many more useful operations</p>
+</article>
+</section>
+<section style="max-width: 640px; margin-left: auto; margin-right: auto;">
+<article>
+<a href="/index/"></a>
+<a href="/index/#groovy-ngs"> Groovy NGS</a>
+</article>
+
+<article>
+<a href="chapter-one/introduction/">Introduction</a>
+<a href="chapter-one/introduction/#what-is-groovy-ngs">Introduction What is Groovy NGS?</a>
+<a href="chapter-one/introduction/#why-groovy">Introduction Why Groovy?</a>
+<a href="chapter-one/introduction/#structure">Introduction Structure</a>
+<a href="chapter-one/introduction/#api-documentation">Introduction API Documentation</a>
+</article>
+
+<article>
+<a href="chapter-one/how-to-use-groovy-NGS/">How To Use Groovy NGS</a>
+<a href="chapter-one/how-to-use-groovy-NGS/#as-a-dependency-in-projects">How To Use Groovy NGS As a Dependency In Projects</a>
+<a href="chapter-one/how-to-use-groovy-NGS/#on-the-command-line">How To Use Groovy NGS On the Command Line</a>
+<a href="chapter-one/how-to-use-groovy-NGS/#interactively-via-a-groovy-shell">How To Use Groovy NGS Interactively via a Groovy Shell</a>
+<a href="chapter-one/how-to-use-groovy-NGS/#in-a-jupyter-notebook">How To Use Groovy NGS In a Jupyter Notebook</a>
+</article>
+
+<article>
+<a href="chapter-2-genomic-regions/regions-and-ranges/">Regions And Ranges</a>
+<a href="chapter-2-genomic-regions/regions-and-ranges/#regions-and-ranges">Regions And Ranges Regions and Ranges</a>
+</article>
+
+<article>
+<a href="chapter-2-genomic-regions/common-operations/">Common Operations</a>
+<a href="chapter-2-genomic-regions/common-operations/#creating-regions-objects">Common Operations Creating Regions Objects</a>
+<a href="chapter-2-genomic-regions/common-operations/#basic-metrics">Common Operations Basic Metrics</a>
+<a href="chapter-2-genomic-regions/common-operations/#treating-as-a-collection">Common Operations Treating as a Collection</a>
+<a href="chapter-2-genomic-regions/common-operations/#finding-overlaps">Common Operations Finding Overlaps</a>
+<a href="chapter-2-genomic-regions/common-operations/#intersection">Common Operations Intersection</a>
+<a href="chapter-2-genomic-regions/common-operations/#flattening">Common Operations Flattening</a>
+<a href="chapter-2-genomic-regions/common-operations/#assigning-properties">Common Operations Assigning Properties</a>
+</article>
+
+<article>
+<a href="chapter-2-genomic-regions/loading-and-saving/">Loading And Saving</a>
+<a href="chapter-2-genomic-regions/loading-and-saving/#loading-bed-files">Loading And Saving Loading BED files</a>
+<a href="chapter-2-genomic-regions/loading-and-saving/#saving-bed-files">Loading And Saving Saving BED files</a>
+<a href="chapter-2-genomic-regions/loading-and-saving/#region-based-data-tables">Loading And Saving Region Based Data Tables</a>
+</article>
+
+<article>
+<a href="chapter-3-vcf-files/parsing-vcf-files/">Parsing Vcf Files</a>
+<a href="chapter-3-vcf-files/parsing-vcf-files/#loading-a-vcf-file">Parsing Vcf Files Loading a VCF File</a>
+<a href="chapter-3-vcf-files/parsing-vcf-files/#accessing-header-information-only">Parsing Vcf Files Accessing Header Information Only</a>
+<a href="chapter-3-vcf-files/parsing-vcf-files/#streaming-processing">Parsing Vcf Files Streaming Processing</a>
+<a href="chapter-3-vcf-files/parsing-vcf-files/#processing-variants-in-vcfs">Parsing Vcf Files Processing Variants in VCFs</a>
+<a href="chapter-3-vcf-files/parsing-vcf-files/#indexed-vcfs">Parsing Vcf Files Indexed VCFs</a>
+</article>
+
+<article>
+<a href="chapter-3-vcf-files/working-with-variants/">Working With Variants</a>
+<a href="chapter-3-vcf-files/working-with-variants/#general-notes">Working With Variants General Notes</a>
+<a href="chapter-3-vcf-files/working-with-variants/#variant-properties">Working With Variants Variant Properties</a>
+<a href="chapter-3-vcf-files/working-with-variants/#variants-as-regions">Working With Variants Variants as Regions</a>
+<a href="chapter-3-vcf-files/working-with-variants/#querying-vcfs-for-presence-of-variants">Working With Variants Querying VCFs for Presence of Variants</a>
+<a href="chapter-3-vcf-files/working-with-variants/#info-fields">Working With Variants Info Fields</a>
+<a href="chapter-3-vcf-files/working-with-variants/#annotated-variants">Working With Variants Annotated Variants</a>
+<a href="chapter-3-vcf-files/working-with-variants/#updating-variant-attributes">Working With Variants Updating Variant Attributes</a>
+</article>
+
+<article>
+<a href="chapter-4-alignment-files/opening-and-reading-alignment-files/">Opening And Reading Alignment Files</a>
+<a href="chapter-4-alignment-files/opening-and-reading-alignment-files/#introduction">Opening And Reading Alignment Files Introduction</a>
+<a href="chapter-4-alignment-files/opening-and-reading-alignment-files/#opening-bam-and-cram-files">Opening And Reading Alignment Files Opening BAM and CRAM Files</a>
+<a href="chapter-4-alignment-files/opening-and-reading-alignment-files/#accessing-reads">Opening And Reading Alignment Files Accessing Reads</a>
+<a href="chapter-4-alignment-files/opening-and-reading-alignment-files/#accessing-paired-reads">Opening And Reading Alignment Files Accessing Paired Reads</a>
+<a href="chapter-4-alignment-files/opening-and-reading-alignment-files/#generating-pileups">Opening And Reading Alignment Files Generating Pileups</a>
+<a href="chapter-4-alignment-files/opening-and-reading-alignment-files/#calculating-coverage-depth">Opening And Reading Alignment Files Calculating Coverage Depth</a>
+</article>
+
+<article>
+<a href="chapter-5-plotting/plotting/">Plotting</a>
+<a href="chapter-5-plotting/plotting/#basic-form-of-plots">Plotting Basic Form of Plots</a>
+<a href="chapter-5-plotting/plotting/#saving-plots">Plotting Saving Plots</a>
+<a href="chapter-5-plotting/plotting/#adding-data-to-plots">Plotting Adding Data to Plots</a>
+<a href="chapter-5-plotting/plotting/#specifying-colors">Plotting Specifying Colors</a>
+<a href="chapter-5-plotting/plotting/#adding-legends">Plotting Adding Legends</a>
+<a href="chapter-5-plotting/plotting/#distribution-plots">Plotting Distribution Plots</a>
+<a href="chapter-5-plotting/plotting/#accessing-generated-images">Plotting Accessing Generated Images</a>
+</article>
+
+<article>
+<a href="chapter-6-miscellaneous-utilities/miscellaneous-utilities/">Miscellaneous Utilities</a>
+<a href="chapter-6-miscellaneous-utilities/miscellaneous-utilities/#creating-readers-writers-and-streams">Miscellaneous Utilities Creating Readers, Writers and Streams</a>
+<a href="chapter-6-miscellaneous-utilities/miscellaneous-utilities/#formatting-tables">Miscellaneous Utilities Formatting Tables</a>
+<a href="chapter-6-miscellaneous-utilities/miscellaneous-utilities/#jupyterlab-support">Miscellaneous Utilities JupyterLab Support</a>
+<a href="chapter-6-miscellaneous-utilities/miscellaneous-utilities/#refgene-database-access">Miscellaneous Utilities RefGene Database Access</a>
+</article>
+</section>
+</div>
+<script type="text/javascript" src="/groovy-ngs-utils/userguide/footer.js"></script>
+<script type="text/javascript" src="/groovy-ngs-utils/userguide/toc.js"></script>
+<script type="text/javascript" src="/groovy-ngs-utils/userguide/assets.js"></script>
+<script type="text/javascript" src="/groovy-ngs-utils/userguide/static/main.js"></script>
+<script type="text/javascript" src="/groovy-ngs-utils/userguide/search-index.js"></script>
+<script>
+document.getElementById('znai').innerHTML = '';
+/*<!--*/
+ReactDOM.render(React.createElement(Documentation, {
+  "docMeta" : {
+    "viewOn" : {
+      "link" : "https://github.com/ssadedin/groovy-ngs-utils",
+      "title" : "Groovy NGS"
+    },
+    "id" : "groovy-ngs-utils/userguide",
+    "title" : "Groovy NGS",
+    "type" : "Guide",
+    "previewEnabled" : false
+  },
+  "page" : {
+    "type" : "Page",
+    "content" : [ {
+      "id" : "groovy-ngs",
+      "title" : "Groovy NGS",
+      "type" : "Section",
+      "content" : [ {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "A toolkit for working with genomic sequencing data in Groovy.",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "The JVM is a powerful platform for data analysis, offering high performance, strong library and platform",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "support with excellent deployment options when it comes time to scale up and productionise your work.",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "Groovy NGS aims to unlock the power of the JVM for working with genomic sequencing data by enabling it",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "to be used with the versatile and highly productive Groovy programming language.",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "Groovy NGS can be used at three levels:",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "bulletMarker" : "*",
+        "tight" : true,
+        "type" : "BulletList",
+        "content" : [ {
+          "type" : "ListItem",
+          "content" : [ {
+            "type" : "Paragraph",
+            "content" : [ {
+              "text" : "Directly as pre-written tools on the command line",
+              "type" : "SimpleText"
+            } ]
+          } ]
+        }, {
+          "type" : "ListItem",
+          "content" : [ {
+            "type" : "Paragraph",
+            "content" : [ {
+              "text" : "For writing simple scripts (bash-style) or interactive analysis in",
+              "type" : "SimpleText"
+            }, {
+              "type" : "SoftLineBreak"
+            }, {
+              "url" : "https://github.com/ssadedin/beakerx",
+              "isFile" : false,
+              "type" : "Link",
+              "content" : [ {
+                "text" : "Jupyter Notebooks",
+                "type" : "SimpleText"
+              } ]
+            } ]
+          } ]
+        }, {
+          "type" : "ListItem",
+          "content" : [ {
+            "type" : "Paragraph",
+            "content" : [ {
+              "text" : "As a library of classes for building full-scale applications",
+              "type" : "SimpleText"
+            } ]
+          } ]
+        } ]
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "Under the hood, Groovy NGS is built on the widely used ",
+          "type" : "SimpleText"
+        }, {
+          "url" : "https://github.com/samtools/htsjdk",
+          "isFile" : false,
+          "type" : "Link",
+          "content" : [ {
+            "text" : "HTSJDK",
+            "type" : "SimpleText"
+          } ]
+        }, {
+          "text" : ". However",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "Groovy NGS makes it much easier to work with these libraries by adding idiomatic Groovy",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "language constructs and filling in important commonly used missing features.",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "Examples of supported functionality are:",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "bulletMarker" : "*",
+        "tight" : true,
+        "type" : "BulletList",
+        "content" : [ {
+          "type" : "ListItem",
+          "content" : [ {
+            "type" : "Paragraph",
+            "content" : [ {
+              "text" : "Reading, processing and filtering VCF files, including integration with common annotation sources such as VEP",
+              "type" : "SimpleText"
+            } ]
+          } ]
+        }, {
+          "type" : "ListItem",
+          "content" : [ {
+            "type" : "Paragraph",
+            "content" : [ {
+              "text" : "Working with Genomic Ranges - full set of operation as well as higher level reading, processing and filtering",
+              "type" : "SimpleText"
+            } ]
+          } ]
+        }, {
+          "type" : "ListItem",
+          "content" : [ {
+            "type" : "Paragraph",
+            "content" : [ {
+              "text" : "Reading, processing and performing logical operations with pedigree (PED) files and family structures",
+              "type" : "SimpleText"
+            } ]
+          } ]
+        }, {
+          "type" : "ListItem",
+          "content" : [ {
+            "type" : "Paragraph",
+            "content" : [ {
+              "text" : "Working with BAM/SAM/CRAM files (including, generating and working with Pileups)",
+              "type" : "SimpleText"
+            } ]
+          } ]
+        }, {
+          "type" : "ListItem",
+          "content" : [ {
+            "type" : "Paragraph",
+            "content" : [ {
+              "text" : "A range of statistical operations including R-like data frames and linear modeling constructs",
+              "type" : "SimpleText"
+            } ]
+          } ]
+        }, {
+          "type" : "ListItem",
+          "content" : [ {
+            "type" : "Paragraph",
+            "content" : [ {
+              "text" : "Many many more useful operations",
+              "type" : "SimpleText"
+            } ]
+          } ]
+        } ]
+      } ]
+    } ],
+    "lastModifiedTime" : 1754207211949,
+    "tocItem" : {
+      "chapterTitle" : "",
+      "pageTitle" : "",
+      "pageMeta" : { },
+      "dirName" : "",
+      "fileName" : "index",
+      "fileExtension" : "",
+      "viewOnRelativePath" : null,
+      "pageSectionIdTitles" : [ {
+        "title" : "Groovy NGS",
+        "id" : "groovy-ngs"
+      } ]
+    }
+  }
+}), document.getElementById("znai"));
+/*-->*/
+
+</script>
+
+</body>
+</html>

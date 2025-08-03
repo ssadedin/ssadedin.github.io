@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" /> 
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"> 
+<title>Groovy NGS: How To Use Groovy NGS</title>
+<link rel="stylesheet" type="text/css" href="/groovy-ngs-utils/userguide/static/css/katex.min.css">
+<link rel="stylesheet" type="text/css" href="/groovy-ngs-utils/userguide/static/main.css">
+<link rel="stylesheet" type="text/css" href="/groovy-ngs-utils/userguide/static/css/global-overrides.css">
+</head>
+<link rel="shortcut icon" href="/groovy-ngs-utils/userguide/favicon.png"type="image/ico"/>
+<body class="theme-znai-dark">
+<script>(function() {
+    var themeNameKey = 'znaiTheme';
+    var darkThemeName = 'znai-dark';
+    var lightThemeName = 'default';
+
+    var znaiTheme = {
+        changeHandlers: [],
+        addChangeHandler(handler) {
+            this.changeHandlers.push(handler);
+        },
+        removeChangeHandler(handler) {
+            var idx = this.changeHandlers.indexOf(handler);
+            this.changeHandlers.splice(idx, 1);
+        },
+        set(name) {
+            this.name = name;
+            document.body.className = 'theme-' + name;
+
+            var idx = 0;
+            var len = this.changeHandlers.length;
+            for (; idx < len; idx++) {
+                this.changeHandlers[idx](name);
+            }
+        },
+        setExplicitly(name) {
+            storeThemeName(name);
+            this.set(name);
+        },
+        setExplicitlyIfNotSetAlready(name) {
+            const themeName = getStoredThemeName();
+            if (themeName) {
+                return
+            }
+
+            this.setExplicitly(name)
+        },
+        toggle() {
+            this.setExplicitly(this.name === lightThemeName ? darkThemeName : lightThemeName)
+        }
+    };
+
+    var mediaThemeName = setLightMatchMediaListenerAndGetThemeName()
+    var themeName = getStoredThemeName() || mediaThemeName;
+    znaiTheme.set(themeName);
+
+    window.znaiTheme = znaiTheme;
+
+    function getStoredThemeName() {
+        return localStorage.getItem(themeNameKey);
+    }
+
+    function storeThemeName(name) {
+        return localStorage.setItem(themeNameKey, name);
+    }
+
+    function setLightMatchMediaListenerAndGetThemeName() {
+        if (!window.matchMedia) {
+            return darkThemeName;
+        }
+
+        var lightQuery = window.matchMedia('(prefers-color-scheme: light)');
+        lightQuery.addListener(function (e) {
+            const newThemeName = e.matches ? lightThemeName : darkThemeName;
+            znaiTheme.setExplicitly(newThemeName);
+        });
+
+        return lightQuery.matches ? lightThemeName : darkThemeName;
+    }
+})()</script>
+<div id="znai"><div id="znai-initial-page-loading" style="margin: -20px 0 0 -20px; padding: 0 40px 40px 0; width: 100vw; height: 100vh; display: flex; justify-content: center; align-items: center">
+    <div></div>
+</div><section style="max-width: 640px; margin-left: auto; margin-right: auto;">
+<article>
+<header><h1>As a Dependency In Projects</h1></header>
+<p>The default way to use Groovy NGS is to build a &quot;fat&quot; jar and include it in your project. This jar file can be created by cloning the repository and executing the gradle command to build the jar: git clone --recursive https://github.com/ssadedin/groovy-ngs-utils.git ./gradlew jar The jar file is created in build/libs/groovy-ngs-utils.jar and includes all necessary dependencies except for Groovy itself. Therefore, you should include the https://mvnrepository.com/artifact/org.apache.groovy/groovy-all groovy-all dependency from Maven for the appropriate Groovy version in your project as well.Note: in the future it is expected that Groovy NGS will move to support Maven repository based dependency resolution so that it can be more easily included in other projects.</p>
+</article>
+
+<article>
+<header><h1>On the Command Line</h1></header>
+<p>Another way to use Groovy NGS is to use the gngs command to execute expressions directly on the command line. For example, after building (as above), to filter a VCF to only chromosome 21: bash cat test.vcf | ./bin/gngs 'VCF.filter { it.chr == &quot;chr21&quot; }' &gt; test.chr21.vcf</p>
+</article>
+
+<article>
+<header><h1>Interactively via a Groovy Shell</h1></header>
+<p>You can run Groovy NGS as a https://en.wikipedia.org/wiki/Read%E2%80%93eval%E2%80%93print_loop REPL to run commands interactively and see the results using the standard Groovy Shell. To facilitate this, there is a script in the bin folder to launch the Groovy Shell with Groovy NGS added to the classpath and the gngs package automatically imported. This can be a very useful way to experiment and learn about how Groovy NGS and Groovy itself works.Here is how an example session looks: bash ./bin/gngsh Groovy Shell (3.0.10, JVM: 11.0.18) Type ':help' or ':h' for help. ------------------------------------------------------------------------------------------------------ groovy:000&gt; import gngs.*; ===&gt; gngs.* groovy:000&gt; vcf = VCF.parse('src/test/data/giab1.tiny.trio.vcf') ===&gt; VCF file src/test/data/giab1.tiny.trio.vcf for NA12877,NA12878,NA12879 groovy:000&gt; vcf.size() ===&gt; 24 groovy:000&gt; vcf.count { it.het } ===&gt; 20</p>
+</article>
+
+<article>
+<header><h1>In a Jupyter Notebook</h1></header>
+<p>A final way to use Groovy NGS is via Jupyter. You can use any available Groovy kernel, however a particularly useful one is https://github.com/twosigma/beakerx BeakerX which provides Groovy kernels out of the box along with a range of Jupyter widgets as enhancements. Together with Groovy NGS. this makes a very effective data analysis platform for genomic data.</p>
+</article>
+</section>
+</div>
+<script type="text/javascript" src="/groovy-ngs-utils/userguide/footer.js"></script>
+<script type="text/javascript" src="/groovy-ngs-utils/userguide/toc.js"></script>
+<script type="text/javascript" src="/groovy-ngs-utils/userguide/assets.js"></script>
+<script type="text/javascript" src="/groovy-ngs-utils/userguide/static/main.js"></script>
+<script type="text/javascript" src="/groovy-ngs-utils/userguide/search-index.js"></script>
+<script>
+document.getElementById('znai').innerHTML = '';
+/*<!--*/
+ReactDOM.render(React.createElement(Documentation, {
+  "docMeta" : {
+    "viewOn" : {
+      "link" : "https://github.com/ssadedin/groovy-ngs-utils",
+      "title" : "Groovy NGS"
+    },
+    "id" : "groovy-ngs-utils/userguide",
+    "title" : "Groovy NGS",
+    "type" : "Guide",
+    "previewEnabled" : false
+  },
+  "page" : {
+    "type" : "Page",
+    "content" : [ {
+      "id" : "as-a-dependency-in-projects",
+      "title" : "As a Dependency In Projects",
+      "type" : "Section",
+      "content" : [ {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "The default way to use Groovy NGS is to build a \"fat\" jar and include it in your project.",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "This jar file can be created by cloning the repository and executing the gradle command",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "to build the jar:",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "lang" : "",
+        "snippet" : "git clone --recursive https://github.com/ssadedin/groovy-ngs-utils.git\n./gradlew jar\n",
+        "lineNumber" : "",
+        "type" : "Snippet"
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "The jar file is created in ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "build/libs/groovy-ngs-utils.jar",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " and includes all necessary dependencies",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "type" : "Emphasis",
+          "content" : [ {
+            "text" : "except",
+            "type" : "SimpleText"
+          } ]
+        }, {
+          "text" : " for Groovy itself. Therefore, you should include the ",
+          "type" : "SimpleText"
+        }, {
+          "url" : "https://mvnrepository.com/artifact/org.apache.groovy/groovy-all",
+          "isFile" : false,
+          "type" : "Link",
+          "content" : [ {
+            "text" : "groovy-all",
+            "type" : "SimpleText"
+          } ]
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "dependency from Maven for the appropriate Groovy version in your project as well.",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "Note: in the future it is expected that Groovy NGS will move to support Maven",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "repository based dependency resolution so that it can be more easily included in",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "other projects.",
+          "type" : "SimpleText"
+        } ]
+      } ]
+    }, {
+      "id" : "on-the-command-line",
+      "title" : "On the Command Line",
+      "type" : "Section",
+      "content" : [ {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "Another way to use Groovy NGS is to use the ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "gngs",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " command to execute expressions directly",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "on the command line. For example, after building (as above), to filter a VCF to only chromosome 21:",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "lang" : "bash",
+        "snippet" : "cat test.vcf | ./bin/gngs 'VCF.filter { it.chr == \"chr21\" }' > test.chr21.vcf\n",
+        "lineNumber" : "",
+        "type" : "Snippet"
+      } ]
+    }, {
+      "id" : "interactively-via-a-groovy-shell",
+      "title" : "Interactively via a Groovy Shell",
+      "type" : "Section",
+      "content" : [ {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "You can run Groovy NGS as a ",
+          "type" : "SimpleText"
+        }, {
+          "url" : "https://en.wikipedia.org/wiki/Read%E2%80%93eval%E2%80%93print_loop",
+          "isFile" : false,
+          "type" : "Link",
+          "content" : [ {
+            "text" : "REPL",
+            "type" : "SimpleText"
+          } ]
+        }, {
+          "text" : " to run commands",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "interactively and see the results using the standard Groovy Shell. To facilitate this, there is a script in the ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "bin",
+          "type" : "InlinedCode"
+        }, {
+          "text" : "",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "folder to launch the Groovy Shell with Groovy NGS added to the classpath and the gngs package automatically imported. This",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "can be a very useful way to experiment and learn about how Groovy NGS and Groovy itself works.",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "Here is how an example session looks:",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "lang" : "bash",
+        "snippet" : "./bin/gngsh \nGroovy Shell (3.0.10, JVM: 11.0.18)\nType ':help' or ':h' for help.\n------------------------------------------------------------------------------------------------------\ngroovy:000> import gngs.*;\n===> gngs.*\ngroovy:000> vcf = VCF.parse('src/test/data/giab1.tiny.trio.vcf')\n===> VCF file src/test/data/giab1.tiny.trio.vcf for NA12877,NA12878,NA12879\ngroovy:000> vcf.size()\n===> 24\ngroovy:000> vcf.count { it.het }\n===> 20\n",
+        "lineNumber" : "",
+        "type" : "Snippet"
+      } ]
+    }, {
+      "id" : "in-a-jupyter-notebook",
+      "title" : "In a Jupyter Notebook",
+      "type" : "Section",
+      "content" : [ {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "A final way to use Groovy NGS is via Jupyter. You can use any available Groovy kernel, however a",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "particularly useful one is ",
+          "type" : "SimpleText"
+        }, {
+          "url" : "https://github.com/twosigma/beakerx",
+          "isFile" : false,
+          "type" : "Link",
+          "content" : [ {
+            "text" : "BeakerX",
+            "type" : "SimpleText"
+          } ]
+        }, {
+          "text" : " which provides Groovy",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "kernels out of the box along with a range of Jupyter widgets as enhancements. Together with Groovy NGS.",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "this makes a very effective data analysis platform for genomic data.",
+          "type" : "SimpleText"
+        } ]
+      } ]
+    } ],
+    "lastModifiedTime" : 1754207211948,
+    "tocItem" : {
+      "chapterTitle" : "Chapter One",
+      "pageTitle" : "How To Use Groovy NGS",
+      "pageMeta" : { },
+      "dirName" : "chapter-one",
+      "fileName" : "how-to-use-groovy-NGS",
+      "fileExtension" : "md",
+      "viewOnRelativePath" : null,
+      "pageSectionIdTitles" : [ {
+        "title" : "As a Dependency In Projects",
+        "id" : "as-a-dependency-in-projects"
+      }, {
+        "title" : "On the Command Line",
+        "id" : "on-the-command-line"
+      }, {
+        "title" : "Interactively via a Groovy Shell",
+        "id" : "interactively-via-a-groovy-shell"
+      }, {
+        "title" : "In a Jupyter Notebook",
+        "id" : "in-a-jupyter-notebook"
+      } ]
+    }
+  }
+}), document.getElementById("znai"));
+/*-->*/
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,10 @@
+{
+  "viewOn" : {
+    "link" : "https://github.com/ssadedin/groovy-ngs-utils",
+    "title" : "Groovy NGS"
+  },
+  "id" : "groovy-ngs-utils/userguide",
+  "title" : "Groovy NGS",
+  "type" : "Guide",
+  "previewEnabled" : false
+}
