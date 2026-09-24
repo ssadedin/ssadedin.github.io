@@ -116,6 +116,11 @@
 <header><h1>Accessing Generated Images</h1></header>
 <p>If you want to add more to the generated plots or manipulate the image in additional ways, you can generate the https://docs.oracle.com/javase/8/docs/api/java/awt/image/BufferedImage.html BufferedImage directly and use standard Java features to draw on it: groovy BufferedImage image = p.image Graphics2D imageGraphics = image.createGraphics() imageGraphics.drawRect(10,10, 20,20) ... As with saving the plot, you can specify the resolution: groovy BufferedImage image = p.getImage(1600, 1200) ...</p>
 </article>
+
+<article>
+<header><h1>Annotating Points with Tooltips</h1></header>
+<p>In a notebook, BeakerX plots support a toolTip attribute which displays text interactively as the mouse moves over data points. Groovy NGS accepts the same attribute, so that code written in a notebook transfers across unchanged. groovy p &lt;&lt; new Points( x: [1,2,3,4], y: [5,6,7,8], toolTip: [1,2,3,4].collect { &quot;X value is: $it&quot; } ) Outside a notebook there is no mouse to hover with, so the tooltips are not displayed unless you ask for them. Calling showTooltips selects which ones to draw, by the index of the data point within the series: groovy p.showTooltips([0,2]) // annotate the first and third points p.save('plot.png') Note that showTooltips is an extension beyond the BeakerX interface and will not work inside a notebook.More often you will want to pick out points by their values rather than by counting positions, which you can do by passing a closure. It is called for each point with any of (x, y, toolTip, index) - declare only the parameters you need: groovy p.showTooltips { x, y, tip, i -&gt; y &gt; 30 } Selecting a Series Where a plot has several sets of data, pass the displayName of the one you want to annotate, or its index: groovy p.showTooltips('Coverage', [3,7]) p.showTooltips(0, [3,7]) With no series given, every series that has tooltips set is annotated. The convenience method showAllTooltips() displays every tooltip that has been set. Positioning By default each tooltip is positioned automatically, by searching for a spot that does not collide with the data, with the other tooltips, or with the edge of the plot. A line is drawn connecting the tooltip to its data point, so that it remains clear which point it describes even when it has to be placed some distance away.Where the automatic choice is not what you want, give a placement instead of a bare index, using a map. Only the points you name need a placement, so the rest stay automatic: groovy p.showTooltips([3: 'NW', 7: 'below']) A placement can be a compass point ( 'N' , 'NE' , 'E' ... or the equivalent 'north_east' form), a readable direction ( 'above' , 'below' , 'left' , 'right' ), an angle in degrees counter-clockwise from east, or a map giving both the direction and how far away to put it: groovy p.showTooltips([3: [anchor: 'NW', distance: 60], 7: [angle: 20]]) Distances are in pixels. Offsets are deliberately not expressed in data units, because a tooltip nudged into place that way would move as soon as the data or the axis range changed.The direction you give is always honoured exactly, but the distance is treated as a minimum. Annotating several series in the same direction is common - for example the first point of each line on a chart - and their points are often close together, so the boxes would otherwise land in a stack on top of each other. Each is instead stepped further out along its own direction until it is clear of the tooltips already placed, spreading them into a staircase. This is a best effort: where there is genuinely no room in the direction asked for, tooltips are placed as well as they can be and you may need to anchor some of them differently. Formatting Tooltips written for notebooks commonly carry a little HTML, and the same subset is understood here: &lt;b&gt; and &lt;i&gt; (or &lt;strong&gt; and &lt;em&gt; ) for emphasis, &lt;br&gt; and &lt;p&gt; for line breaks, and the usual character entities such as &amp;amp; . Any other tag is stripped, leaving its text, so markup that is not supported degrades to plain text rather than appearing literally in the image. groovy p &lt;&lt; new Points( x: positions, y: depths, toolTip: samples.collect { &quot;&lt;b&gt;$it.id&lt;/b&gt;&lt;br&gt;depth: &lt;i&gt;${it.depth}x&lt;/i&gt;&quot; } ) Whitespace behaves as it does in HTML, so that a tooltip built as a multi-line Groovy string renders the same offline as it does in a notebook. Newlines and indentation in the source are only whitespace, runs of whitespace collapse to a single space, and whitespace at the start or end of a line is dropped. Only &lt;br&gt; and &lt;p&gt; break a line, and &amp;nbsp; preserves a space: groovy toolTip: points.collect { pnt -&gt; &quot;&quot;&quot;&lt;b&gt;$name&lt;/b&gt; &lt;br&gt; &lt;b&gt;Sensitivity:&lt;/b&gt; ${String.format('%.3f', pnt.Sensitivity)} &lt;br&gt; &lt;b&gt;Precision:&lt;/b&gt; ${String.format('%.3f', pnt.Precision)} &quot;&quot;&quot; } Styling Appearance is controlled by a ToolTipStyle , which may be set for the whole plot or overridden for one series by passing named arguments to showTooltips : groovy p.toolTipStyle.maxWidth = 200 // wrap long text at 200 pixels p.showTooltips('Coverage', [3,7], fontSize: 13, background: Color.white, leader: false) Where tooltips sit over dense data it is often useful to let some of it show through. backgroundOpacity runs from 0 for fully transparent to 1: groovy p.toolTipStyle.backgroundOpacity = 0.6 This scales the alpha of the background colour rather than replacing it, so the two compose and can be set independently - a colour that is itself translucent stays that way at an opacity of 1. Note that the default background is already very slightly translucent. Colours may of course also carry their own alpha directly, which applies equally to border , textColor and leaderColor : groovy p.toolTipStyle.background = new Color(255, 255, 255, 200) Dropping the background opacity much below about a half usually reads better with the border softened to match, or it appears as a hard outline floating over the data.</p>
+</article>
 </section>
 </div>
 <script type="text/javascript" src="/groovy-ngs-utils/userguide/footer.js"></script>
@@ -411,7 +416,7 @@ ReactDOM.render(React.createElement(Documentation, {
       }, {
         "scale" : 0.5,
         "imageSrc" : "/groovy-ngs-utils/userguide/chapter-5-plotting/example_plot.png",
-        "timestamp" : 1754208172763,
+        "timestamp" : 1790290756339,
         "shapes" : [ ],
         "width" : 1346.0,
         "height" : 1028.0,
@@ -506,7 +511,7 @@ ReactDOM.render(React.createElement(Documentation, {
       }, {
         "scale" : 0.5,
         "imageSrc" : "/groovy-ngs-utils/userguide/chapter-5-plotting/example_plot2.png",
-        "timestamp" : 1754208172764,
+        "timestamp" : 1790290756340,
         "shapes" : [ ],
         "width" : 1328.0,
         "height" : 1006.0,
@@ -540,7 +545,7 @@ ReactDOM.render(React.createElement(Documentation, {
       }, {
         "scale" : 0.5,
         "imageSrc" : "/groovy-ngs-utils/userguide/chapter-5-plotting/density.png",
-        "timestamp" : 1754208172763,
+        "timestamp" : 1790290756339,
         "shapes" : [ ],
         "width" : 1368.0,
         "height" : 1024.0,
@@ -553,7 +558,7 @@ ReactDOM.render(React.createElement(Documentation, {
       }, {
         "scale" : 0.5,
         "imageSrc" : "/groovy-ngs-utils/userguide/chapter-5-plotting/histogram.png",
-        "timestamp" : 1754208172764,
+        "timestamp" : 1790290756340,
         "shapes" : [ ],
         "width" : 1300.0,
         "height" : 1006.0,
@@ -607,8 +612,590 @@ ReactDOM.render(React.createElement(Documentation, {
         "lineNumber" : "",
         "type" : "Snippet"
       } ]
+    }, {
+      "id" : "annotating-points-with-tooltips",
+      "title" : "Annotating Points with Tooltips",
+      "type" : "Section",
+      "content" : [ {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "In a notebook, BeakerX plots support a ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "toolTip",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " attribute which displays text",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "interactively as the mouse moves over data points. Groovy NGS accepts the same",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "attribute, so that code written in a notebook transfers across unchanged.",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "lang" : "groovy",
+        "snippet" : "p << new Points(\n    x: [1,2,3,4],\n    y: [5,6,7,8],\n    toolTip: [1,2,3,4].collect { \"X value is: $it\" }\n)\n",
+        "lineNumber" : "",
+        "type" : "Snippet"
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "Outside a notebook there is no mouse to hover with, so the tooltips are not",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "displayed unless you ask for them. Calling ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "showTooltips",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " selects which ones to",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "draw, by the index of the data point within the series:",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "lang" : "groovy",
+        "snippet" : "p.showTooltips([0,2])  // annotate the first and third points\n\np.save('plot.png')\n",
+        "lineNumber" : "",
+        "type" : "Snippet"
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "Note that ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "showTooltips",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " is an extension beyond the BeakerX interface and will",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "not work inside a notebook.",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "More often you will want to pick out points by their values rather than by",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "counting positions, which you can do by passing a closure. It is called for",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "each point with any of ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "(x, y, toolTip, index)",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " - declare only the parameters",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "you need:",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "lang" : "groovy",
+        "snippet" : "p.showTooltips { x, y, tip, i -> y > 30 }\n",
+        "lineNumber" : "",
+        "type" : "Snippet"
+      }, {
+        "id" : "annotating-points-with-tooltips-selecting-a-series",
+        "level" : 2,
+        "title" : "Selecting a Series",
+        "type" : "SubHeading"
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "Where a plot has several sets of data, pass the ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "displayName",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " of the one you",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "want to annotate, or its index:",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "lang" : "groovy",
+        "snippet" : "p.showTooltips('Coverage', [3,7])\np.showTooltips(0, [3,7])\n",
+        "lineNumber" : "",
+        "type" : "Snippet"
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "With no series given, every series that has tooltips set is annotated. The",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "convenience method ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "showAllTooltips()",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " displays every tooltip that has been set.",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "id" : "annotating-points-with-tooltips-positioning",
+        "level" : 2,
+        "title" : "Positioning",
+        "type" : "SubHeading"
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "By default each tooltip is positioned automatically, by searching for a spot",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "that does not collide with the data, with the other tooltips, or with the edge",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "of the plot. A line is drawn connecting the tooltip to its data point, so that",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "it remains clear which point it describes even when it has to be placed some",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "distance away.",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "Where the automatic choice is not what you want, give a placement instead of a",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "bare index, using a map. Only the points you name need a placement, so the rest",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "stay automatic:",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "lang" : "groovy",
+        "snippet" : "p.showTooltips([3: 'NW', 7: 'below'])\n",
+        "lineNumber" : "",
+        "type" : "Snippet"
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "A placement can be a compass point (",
+          "type" : "SimpleText"
+        }, {
+          "code" : "'N'",
+          "type" : "InlinedCode"
+        }, {
+          "text" : ", ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "'NE'",
+          "type" : "InlinedCode"
+        }, {
+          "text" : ", ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "'E'",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " ... or the equivalent",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "code" : "'north_east'",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " form), a readable direction (",
+          "type" : "SimpleText"
+        }, {
+          "code" : "'above'",
+          "type" : "InlinedCode"
+        }, {
+          "text" : ", ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "'below'",
+          "type" : "InlinedCode"
+        }, {
+          "text" : ", ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "'left'",
+          "type" : "InlinedCode"
+        }, {
+          "text" : ",",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "code" : "'right'",
+          "type" : "InlinedCode"
+        }, {
+          "text" : "), an angle in degrees counter-clockwise from east, or a map giving",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "both the direction and how far away to put it:",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "lang" : "groovy",
+        "snippet" : "p.showTooltips([3: [anchor: 'NW', distance: 60], 7: [angle: 20]])\n",
+        "lineNumber" : "",
+        "type" : "Snippet"
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "Distances are in pixels. Offsets are deliberately not expressed in data units,",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "because a tooltip nudged into place that way would move as soon as the data or",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "the axis range changed.",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "The direction you give is always honoured exactly, but the distance is treated",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "as a minimum. Annotating several series in the same direction is common - for",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "example the first point of each line on a chart - and their points are often",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "close together, so the boxes would otherwise land in a stack on top of each",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "other. Each is instead stepped further out along its own direction until it is",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "clear of the tooltips already placed, spreading them into a staircase. This is",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "a best effort: where there is genuinely no room in the direction asked for,",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "tooltips are placed as well as they can be and you may need to anchor some of",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "them differently.",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "id" : "annotating-points-with-tooltips-formatting",
+        "level" : 2,
+        "title" : "Formatting",
+        "type" : "SubHeading"
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "Tooltips written for notebooks commonly carry a little HTML, and the same subset",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "is understood here: ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "<b>",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " and ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "<i>",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " (or ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "<strong>",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " and ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "<em>",
+          "type" : "InlinedCode"
+        }, {
+          "text" : ") for emphasis,",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "code" : "<br>",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " and ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "<p>",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " for line breaks, and the usual character entities such as",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "code" : "&amp;",
+          "type" : "InlinedCode"
+        }, {
+          "text" : ". Any other tag is stripped, leaving its text, so markup that is not",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "supported degrades to plain text rather than appearing literally in the image.",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "lang" : "groovy",
+        "snippet" : "p << new Points(\n    x: positions,\n    y: depths,\n    toolTip: samples.collect { \"<b>$it.id</b><br>depth: <i>${it.depth}x</i>\" }\n)\n",
+        "lineNumber" : "",
+        "type" : "Snippet"
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "Whitespace behaves as it does in HTML, so that a tooltip built as a multi-line",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "Groovy string renders the same offline as it does in a notebook. Newlines and",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "indentation in the source are only whitespace, runs of whitespace collapse to a",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "single space, and whitespace at the start or end of a line is dropped. Only",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "code" : "<br>",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " and ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "<p>",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " break a line, and ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "&nbsp;",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " preserves a space:",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "lang" : "groovy",
+        "snippet" : "toolTip: points.collect { pnt ->\n    \"\"\"<b>$name</b>\n         <br>\n         <b>Sensitivity:</b> ${String.format('%.3f', pnt.Sensitivity)}\n         <br>\n         <b>Precision:</b> ${String.format('%.3f', pnt.Precision)}\n    \"\"\"\n}\n",
+        "lineNumber" : "",
+        "type" : "Snippet"
+      }, {
+        "id" : "annotating-points-with-tooltips-styling",
+        "level" : 2,
+        "title" : "Styling",
+        "type" : "SubHeading"
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "Appearance is controlled by a ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "ToolTipStyle",
+          "type" : "InlinedCode"
+        }, {
+          "text" : ", which may be set for the whole",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "plot or overridden for one series by passing named arguments to ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "showTooltips",
+          "type" : "InlinedCode"
+        }, {
+          "text" : ":",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "lang" : "groovy",
+        "snippet" : "p.toolTipStyle.maxWidth = 200       // wrap long text at 200 pixels\n\np.showTooltips('Coverage', [3,7], fontSize: 13, background: Color.white, leader: false)\n",
+        "lineNumber" : "",
+        "type" : "Snippet"
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "Where tooltips sit over dense data it is often useful to let some of it show",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "through. ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "backgroundOpacity",
+          "type" : "InlinedCode"
+        }, {
+          "text" : " runs from 0 for fully transparent to 1:",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "lang" : "groovy",
+        "snippet" : "p.toolTipStyle.backgroundOpacity = 0.6\n",
+        "lineNumber" : "",
+        "type" : "Snippet"
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "This scales the alpha of the background colour rather than replacing it, so",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "the two compose and can be set independently - a colour that is itself",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "translucent stays that way at an opacity of 1. Note that the default",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "background is already very slightly translucent. Colours may of course also",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "carry their own alpha directly, which applies equally to ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "border",
+          "type" : "InlinedCode"
+        }, {
+          "text" : ", ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "textColor",
+          "type" : "InlinedCode"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "and ",
+          "type" : "SimpleText"
+        }, {
+          "code" : "leaderColor",
+          "type" : "InlinedCode"
+        }, {
+          "text" : ":",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "lang" : "groovy",
+        "snippet" : "p.toolTipStyle.background = new Color(255, 255, 255, 200)\n",
+        "lineNumber" : "",
+        "type" : "Snippet"
+      }, {
+        "type" : "Paragraph",
+        "content" : [ {
+          "text" : "Dropping the background opacity much below about a half usually reads better",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "with the border softened to match, or it appears as a hard outline floating",
+          "type" : "SimpleText"
+        }, {
+          "type" : "SoftLineBreak"
+        }, {
+          "text" : "over the data.",
+          "type" : "SimpleText"
+        } ]
+      }, {
+        "scale" : 0.5,
+        "imageSrc" : "/groovy-ngs-utils/userguide/chapter-5-plotting/tooltips.png",
+        "timestamp" : 1790290756341,
+        "shapes" : [ ],
+        "width" : 1024.0,
+        "height" : 800.0,
+        "type" : "AnnotatedImage"
+      } ]
     } ],
-    "lastModifiedTime" : 1754208172764,
+    "lastModifiedTime" : 1790290756340,
     "tocItem" : {
       "chapterTitle" : "Chapter 5 Plotting",
       "pageTitle" : "Plotting",
@@ -638,6 +1225,9 @@ ReactDOM.render(React.createElement(Documentation, {
       }, {
         "title" : "Accessing Generated Images",
         "id" : "accessing-generated-images"
+      }, {
+        "title" : "Annotating Points with Tooltips",
+        "id" : "annotating-points-with-tooltips"
       } ]
     }
   }

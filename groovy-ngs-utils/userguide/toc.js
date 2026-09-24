@@ -245,6 +245,9 @@ toc = [ {
     }, {
       "title" : "Accessing Generated Images",
       "id" : "accessing-generated-images"
+    }, {
+      "title" : "Annotating Points with Tooltips",
+      "id" : "annotating-points-with-tooltips"
     } ]
   } ]
 }, {
